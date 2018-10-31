@@ -16,14 +16,14 @@
                 </div>
                 <div class="hill" v-else>
                 </div> -->
-                <img :src="'./src/assets/rain' + tacts[tact][indexRow][indexCell].rain + '.png'" alt="" srcset="" class="img-rain">
-                <img :src="'./src/assets/sun' + tacts[tact][indexRow][indexCell].sun + '.png'" alt="" srcset="" class="img-sun">
-                <img :src="'./src/assets/grass' + tacts[tact][indexRow][indexCell].grass + '.png'" alt="" srcset="" class="img-sun">
+                <img :src="'./src/assets/rain' + tacts[tact][indexRow][indexCell].rain + '.png'" alt="" srcset="" class="img-rain" v-if="tacts[tact][indexRow][indexCell].rain != 0">
+                <img :src="'./src/assets/sun' + tacts[tact][indexRow][indexCell].sun + '.png'" alt="" srcset="" class="img-sun" v-if="tacts[tact][indexRow][indexCell].sun != 0">
+                <img :src="'./src/assets/grass' + tacts[tact][indexRow][indexCell].grass + '.png'" alt="" srcset="" class="img-grass" v-if="tacts[tact][indexRow][indexCell].grass != 0">
                 <br>
-               Дождь = {{ tacts[tact][indexRow][indexCell]['rain'] }}
+               <!-- Дождь = {{ tacts[tact][indexRow][indexCell]['rain'] }}
                Солнце = {{ tacts[tact][indexRow][indexCell]['sun'] }}
                Тип = {{ tacts[tact][indexRow][indexCell]['type'] }}
-               Трава = {{ tacts[tact][indexRow][indexCell]['grass'] }}
+               Трава = {{ tacts[tact][indexRow][indexCell]['grass'] }} -->
             </div>
         </div>
     </div>
@@ -212,10 +212,14 @@
 </script>
 
 <style>
+    .container {
+        margin-bottom: 15px;
+    }
     .row {
         background-color: #f32563;
-        width: 100%;
+        /* width: 100%; */
         height: 100%;
+        /* padding: 10px 0px 5px; */
         display: inline-grid;
         grid-column: 1/span 1;
         /* grid-gap: 5px; */
@@ -229,16 +233,21 @@
         grid-row: 1/span 1;
         padding: 0;
         background-image: url();
+        position: relative;
         /* grid-gap: 5px; */
     }
     .img-sun, .img-rain {   
         width: 30%;
-        position: ;
         right: 0;
     }
     .img-rain {
         position: relative;
         right: -20%;
+    }
+    .img-grass {
+        position: absolute;
+        bottom: 0;
+        left: 10px;
     }
     .Water {
         background-color: #1fc8db;
