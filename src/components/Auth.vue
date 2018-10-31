@@ -16,7 +16,7 @@
   export default {
     data() {
       return {
-        size: 0
+        size: 0,
       }
     },
     methods: {
@@ -37,7 +37,8 @@
                     this.map[i].push(cell)
                 }
             }
-
+            this.track.push(this.map);
+            // this.map = [];
 
         },
 
@@ -47,7 +48,7 @@
 
 
     },
-    props: ['map']
+    props: ['map', 'track']
   }
 
 </script>

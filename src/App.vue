@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <auth :map="array"></auth>
-    <mapa :array="array"/>
+    <auth :map="[]" :track="track"></auth>
+    <mapa :tacts="track"/>
   </div>
 </template>
 
@@ -14,6 +14,7 @@ export default {
   data () {
     return {
       array: [],
+      track: [],
     }
   },
   components: {
