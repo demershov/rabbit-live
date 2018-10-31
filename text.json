@@ -1,0 +1,9 @@
+{
+    "cell": {
+        "type": "String",
+        "rain": 0,
+        "sun": 0,
+        "grass": 0,
+        
+    }
+}
