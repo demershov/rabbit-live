@@ -7,45 +7,131 @@
                 <button class="button is-primary">Добавить кроликов</button>
             </div>
         </div>
-
+        <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
+        <p>Текущий такт: {{ tact + 1 }}</p>
         <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
-            <div v-for="(cell, indexCell) in tacts[tact][indexRow]" :key="indexCell" class="cell" :class="tacts[tact][indexRow][indexCell]['type']">
-                <!-- <div class="field" v-if="tacts[tact][indexRow][indexCell]['type'] === 'Field'">
-                </div>
-                <div class="water" v-else-if="tacts[tact][indexRow][indexCell]['type'] === 'Water'">
-                </div>
-                <div class="hill" v-else>
-                </div> -->
-                <img :src="'./src/assets/rain' + tacts[tact][indexRow][indexCell].rain + '.png'" alt="" srcset="" class="img-rain" v-if="tacts[tact][indexRow][indexCell].rain != 0">
-                <img :src="'./src/assets/sun' + tacts[tact][indexRow][indexCell].sun + '.png'" alt="" srcset="" class="img-sun" v-if="tacts[tact][indexRow][indexCell].sun != 0">
-                <img :src="'./src/assets/grass' + tacts[tact][indexRow][indexCell].grass + '.png'" alt="" srcset="" class="img-grass" v-if="tacts[tact][indexRow][indexCell].grass != 0">
+            <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
+
+                <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain != 0">
+                <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun != 0">
+                <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass != 0">
                 <br>
+                Трава = {{ tacts[tact][indexRow][indexCell]['grass'] }}
                <!-- Дождь = {{ tacts[tact][indexRow][indexCell]['rain'] }}
                Солнце = {{ tacts[tact][indexRow][indexCell]['sun'] }}
                Тип = {{ tacts[tact][indexRow][indexCell]['type'] }}
-               Трава = {{ tacts[tact][indexRow][indexCell]['grass'] }} -->
+                -->
+               <!-- <div class="item-wrapper">
+                    <div v-for="(item, index) in tacts[tact][indexRow][indexCell]" @click.prevent.stop="handleClick($event, item)" class="item-wrapper__item" :key="index">
+                        {{item.name}}
+                    </div>
+                </div> -->
             </div>
         </div>
+        
+        <vue-simple-context-menu
+            :id="'myUniqueId'"
+            :options="options"
+            :ref="'vueSimpleContextMenu'"
+            @optionClicked="optionClicked">
+        </vue-simple-context-menu>
+
+        
     </div>
 </template>
 
 <script>
+    
+    
     export default {
         data () {
             return {
                 tact: 0,
-                array: []
+                array: [],
+                options: [
+                    {
+                        name: 'Увеличить сочность',
+                        slug: 'increaseJuiciness'
+                    },
+
+                    {
+                        name: 'Уменьшить сочность',
+                        slug: 'reduceJuiciness'
+                    },
+
+                    {
+                        name: 'Добавить интенсивность дождя',
+                        slug: 'increaseRain'
+                    },
+
+                    {
+                        name: 'Уменьшить интенсивность дождя',
+                        slug: 'reduceRain'
+                    },
+
+                    {
+                        name: 'Увеличить температуру',
+                        slug: 'increaseSun',
+                    },
+
+                    {
+                        name: 'Уменьшить температуру',
+                        slug: 'reduceSun',
+                    },
+                ]
             }
         },
         props: ['tacts'],
         methods: {
 
+            handleClick (event, item, indexRow, indexCell) {
+                if(this.tact === this.tacts.length - 1) {
+                    this.$refs.vueSimpleContextMenu.showMenu(event, item);
+                }
+            },
+
+            optionClicked (event) {
+                let cell = this.tacts[this.tact][event.item[0]][event.item[1]];
+                let method = event.option.slug;
+                
+                if(cell.type === 'Field') {
+                    if (method === 'increaseJuiciness') {
+                        this.increaseJuiciness(cell);
+                    }
+
+                    else if (method === 'reduceJuiciness') {
+                        this.reduceJuiciness(cell);
+                    }
+                }
+
+                if (method === 'increaseRain') {
+                    this.increaseRain(cell);
+                } 
+
+                else if (method === 'reduceRain') {
+                    this.reduceRain(cell);
+                }
+
+                else if (method === 'increaseSun') {
+                    this.increaseSun(cell);
+                }
+
+                else if(method === 'reduceSun') {
+                    this.reduceSun(cell);
+                }
+            },
+
             previousTick() {
+                this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
                 this.tact -= 1 ? this.tact > 0 : 0;
             },
 
             nextTick() {
-                console.log(this.tact === this.tacts.length - 1)
+                console.log(this.tacts[this.tact]);
+                
+                this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
+                console.log(this.array);
+                
                 if (this.tact === this.tacts.length - 1) {
                     this.calcCells();
                 }
@@ -56,8 +142,6 @@
 
             calcCells() {
 
-                this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
-                
                 for (let i = 0; i < this.array.length; i++) {
                     for (let j = 0; j < this.array[i].length; j++) {
 
@@ -69,7 +153,7 @@
 
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
-                            // this.liveGrass(currentCell)
+                            // this.liveGrass(currentCell);
                             this.processingCell(currentCell, rightCell, leftCell, topCell, bottomCell);
                         }
 
@@ -93,60 +177,55 @@
             // В зависимости от соседней ячейке появляется трава или нет
             processingCell(currentCell, rightCell, leftCell, topCell, bottomCell) {
                 // Если ячейка справа существует
-                if (typeof rightCell !== 'undefined') {
+                console.log(currentCell);
+                
+                if (typeof rightCell !== 'undefined' && this.checkNeighbour(rightCell)) {
                     // Если соседняя ячейка справа явялется водой и у текущей ячейке существует солнце
-                    if (this.checkNeighbour(rightCell) && currentCell['sun'] > 0) {
-                        currentCell['grass'] += 1 ? currentCell['grass'] != 5 && currentCell['grass'] == 0 : currentCell['grass'];
-                        return 1;
+                    if (currentCell['sun'] > 0) {
+                        increaseJuiciness(currentCell);
                     }
-
                     else {
                         this.liveGrass(currentCell);
-                        return 1;
                     }
                 }
 
                 // Если ячейка слева существует
-                if (typeof leftCell !== 'undefined') {
+                else if (typeof leftCell !== 'undefined' && this.checkNeighbour(leftCell)) {
                     // Если соседняя ячейка слева явялется водой и у текущей ячейке существует солнце
-                    if (this.checkNeighbour(leftCell) && currentCell['sun'] > 5) {
-                        currentCell['grass'] += 1 ? currentCell['grass'] != 5 && currentCell['grass'] == 0 : currentCell['grass'];
-                        return 1;
+                    if (currentCell['sun'] > 0) {
+                         increaseJuiciness(currentCell);
                     }
-
                     else {
                         this.liveGrass(currentCell);
-                        return 1;
                     }
                 }
 
                 // Если ячейка сверху существует
-                if (typeof topCell !== 'undefined') {
+                else if (typeof topCell !== 'undefined' && this.checkNeighbour(topCell)) {
                     // Если соседняя ячейка сверху явялется водой и у текущей ячейке существует солнце
-                    if (this.checkNeighbour(topCell) && currentCell['sun'] > 5) {
-                        currentCell['grass'] += 1 ? currentCell['grass'] != 5 && currentCell['grass'] == 0 : currentCell['grass'];
-                        return 1;
+                    if ( currentCell['sun'] > 0) {
+                         increaseJuiciness(currentCell);
                     }
-
                     else {
                         this.liveGrass(currentCell);
-                        return 1;
                     }
                 }
 
                 // Если ячейка снизу существует
-                if (typeof topCell !== 'undefined') {
+                else if (typeof bottomCell !== 'undefined' && this.checkNeighbour(bottomCell)) {
                     // Если соседняя ячейка снизу явялется водой и у текущей ячейке существует солнце
-                    if (this.checkNeighbour(topCell) && currentCell['sun'] > 5) {
-                        currentCell['grass'] += 1 ? currentCell['grass'] != 5 && currentCell['grass'] == 0 : currentCell['grass'];
-                        return 1;
+                    if ( currentCell['sun'] > 0) {
+                         increaseJuiciness(currentCell);
                     }
-
                     else {
                         this.liveGrass(currentCell);
-                        return 1;
                     }
                 }
+                else {
+                    this.liveGrass(currentCell);
+                }
+
+                
             },
 
             // Обработка ячейки в зависимости от погоды
@@ -158,42 +237,42 @@
 
                 // 1 (Слабый дождик) 1 (Слабое солнце) Растет трава
                 else if (currentCell['rain'] === 1 && currentCell['sun'] === 1) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
 
                 // 2 (Средний дождь) 1 (Слабое солнце)
                 else if (currentCell['rain'] === 2 && currentCell['sun'] === 1) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
 
                 // 1 (Слабый дождик) 2 (Сильное солнце) Растет трава
                 else if (currentCell['rain'] === 1 && currentCell['sun'] === 2) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
 
                 // 2 (Средний дождь) 2 (Сильное солнце) Растет трава
                 else if (currentCell['rain'] === 2 && currentCell['sun'] === 2) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
 
                 // 3 (Ливень) 2 (Сильное солнце) Растет трава
                 else if (currentCell['rain'] === 3 && currentCell['sun'] === 2) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
 
                 // 0 (Нет дождя) 3 (Жгучее солнце) Высыхает трава
                 else if (currentCell['rain'] === 0 && currentCell['sun'] === 3) {
-                    currentCell['grass'] -= 1 ? currentCell['grass'] != 0 : currentCell['grass'];
+                    this.reduceJuiciness(currentCell)
                 }
 
                 // 2 (Средний дождь) 3 (Жгучее солнце) Растет трава
                 else if (currentCell['rain'] === 2 && currentCell['sun'] === 3) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
 
                 // 3 (Ливень) 3 (Жгучее солнце) Растет трава
                 else if (currentCell['rain'] === 3 && currentCell['sun'] === 3) {
-                    currentCell['grass'] += 1 ? currentCell['grass'] != 5 : currentCell['grass'];
+                    this.increaseJuiciness(currentCell);
                 }
             },
             
@@ -207,6 +286,30 @@
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             },
 
+            increaseJuiciness(cell) {
+                cell['grass'] += 1 ? cell['grass'] != 5 : cell['grass'];
+            },
+
+            reduceJuiciness(cell) {
+                cell['grass'] -= 1 ? cell['grass'] != 0 : cell['grass'];
+            },
+
+            increaseRain(cell) {
+                cell['rain'] += 1 ? cell['rain'] != 3 : cell['rain'];
+            },
+
+            reduceRain(cell) {
+                cell['rain'] -= 1 ? cell['rain'] != 0 : cell['rain'];
+            },
+
+            increaseSun(cell) {
+                cell['sun'] += 1 ? cell['sun'] != 3 : cell['sun'];
+            }, 
+
+            reduceSun(cell) {
+                cell['sun'] -= 1 ? cell['sun'] != 0 : cell['sun'];
+            }
+
         }
     }
 </script>
@@ -216,7 +319,7 @@
         margin-bottom: 15px;
     }
     .row {
-        background-color: #f32563;
+        /* background-color: #f32563; */
         /* width: 100%; */
         height: 100%;
         /* padding: 10px 0px 5px; */
@@ -226,13 +329,13 @@
     }
 
     .cell {
-        background-color: #81c1f5;
+        /* background-color: #81c1f5; */
         width: 220px;
         height: 200px;
-        border: 1px solid #000;
+        /* border: 1px solid #000; */
         grid-row: 1/span 1;
         padding: 0;
-        background-image: url();
+        /* background-image: url(); */
         position: relative;
         /* grid-gap: 5px; */
     }
@@ -272,6 +375,7 @@
     .Water {
         background-image: url('../assets/water.png');
     }
+    
 
 
 </style>
