@@ -4,23 +4,27 @@
             <div class="column">
                 <button class="button is-primary" @click="previousTick()">Предыдущий Такс</button>
                 <button class="button is-primary" @click="nextTick()">Следующий Такт</button>
-                <button class="button is-primary">Добавить кроликов</button>
+                <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
+                <button class="button is-primary" @click="autoLife()">Поехали</button>
+                <button class="button is-primary" @click="stopLife()">Приехали</button>
             </div>
         </div>
         <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
-        <p>Текущий такт: {{ tact + 1 }}</p>
+        <p v-if="tacts.length > 0">Текущий такт: {{ tact + 1 }}</p>
         <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
             <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
 
-                <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain != 0">
-                <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun != 0">
-                <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass != 0">
+                <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
+                <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun > 0">
+                <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass > 0">
                 <br>
-                Трава = {{ tacts[tact][indexRow][indexCell]['grass'] }}
-               <!-- Дождь = {{ tacts[tact][indexRow][indexCell]['rain'] }}
-               Солнце = {{ tacts[tact][indexRow][indexCell]['sun'] }}
-               Тип = {{ tacts[tact][indexRow][indexCell]['type'] }}
-                -->
+                <i v-if="cell.rabbits != 0">Кролики - {{ cell.rabbits }}</i>
+               
+               <!-- Дождь = {{ cell.rain }}
+               Солнце = {{ cell.sun }}
+               Тип = {{ cell.type }}
+               Трава {{ cell.grass }} -->
+               
                <!-- <div class="item-wrapper">
                     <div v-for="(item, index) in tacts[tact][indexRow][indexCell]" @click.prevent.stop="handleClick($event, item)" class="item-wrapper__item" :key="index">
                         {{item.name}}
@@ -48,6 +52,8 @@
             return {
                 tact: 0,
                 array: [],
+                life: 0,
+                rabbitsLive: false,
                 options: [
                     {
                         name: 'Увеличить сочность',
@@ -83,7 +89,6 @@
         },
         props: ['tacts'],
         methods: {
-
             handleClick (event, item, indexRow, indexCell) {
                 if(this.tact === this.tacts.length - 1) {
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
@@ -122,51 +127,49 @@
             },
 
             previousTick() {
+                this.tact = (this.tact > 0) ? this.tact - 1 : 0;
                 this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
-                this.tact -= 1 ? this.tact > 0 : 0;
             },
 
             nextTick() {
-                console.log(this.tacts[this.tact]);
-                
-                this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
-                console.log(this.array);
+                // TODO: Перенести в функцию
                 
                 if (this.tact === this.tacts.length - 1) {
+                    this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
                     this.calcCells();
                 }
                 else {
-                    this.tact++;
+                    this.array = JSON.parse(JSON.stringify(this.tacts[this.tact + 1]));
                 }
+                this.tact++;
+                // console.log(this.tacts[this.tact]);
+                
             },
 
             calcCells() {
-
                 for (let i = 0; i < this.array.length; i++) {
                     for (let j = 0; j < this.array[i].length; j++) {
 
                         let currentCell = this.array[i][j];
                         let rightCell = this.array[i][j + 1];
                         let leftCell = this.array[i][j - 1];
-                        let topCell = typeof this.array[i + 1] !== 'undefined' ? this.array[i + 1][j] : undefined;
-                        let bottomCell =  typeof this.array[i - 1] !== 'undefined' ? this.array[i - 1][j] : undefined;
+                        let topCell = typeof this.array[i - 1] !== 'undefined' ? this.array[i - 1][j] : undefined;
+                        let bottomCell =  typeof this.array[i + 1] !== 'undefined' ? this.array[i + 1][j] : undefined;
 
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
-                            // this.liveGrass(currentCell);
-                            this.processingCell(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell)
+                            this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
                         }
-
-                        this.generationWWeather(currentCell);
+                        this.generationWeather(currentCell);
                     
                     }
                 }
-                this.tacts.push(JSON.parse(JSON.stringify(this.array)))
-                this.tact++;
+                this.tacts.push(this.array)
             },
 
-            checkNeighbour(cell) {
-                if (cell.type === 'Water') {
+            checkNeighbour(cell, type) {
+                if (typeof cell !== 'undefined' && cell.type === type) {
                     return true
                 }
                 else {
@@ -174,48 +177,117 @@
                 }
             },
 
+            addRabbits() {
+                this.array = this.tacts[this.tact];
+                this.rabbitsLive = true;
+                for (let i = 0; i < this.array.length; i++) {
+                    for (let j = 0; j < this.array[i].length; j++) {
+                        let currentCell = this.array[i][j];
+                        // Если данная ячейка является полем
+                        if (currentCell['type'] === 'Field') {
+                            currentCell['rabbits'] = this.getRandomInt(0, 3);
+                        }
+                    }
+                }
+            },
+
+            proccessingRabbits(cell, rightCell, leftCell, topCell, bottomCell) {
+                if(cell.rabbits == 2) {
+                    cell.rabbits++;
+                }
+
+                if (this.rabbitsLive && cell.rabbits > 0) {
+                    console.log(this.tact, cell, '1');
+                    if (cell.rabbits > cell.grass || cell.rabbits === 3) {
+                        
+                        let hungryRabbits = (cell.rabbits - cell.grass > 0) ? cell.rabbits - cell.grass : 0;
+                        console.log('Зашел!', cell, hungryRabbits);
+                        while(hungryRabbits != 0)
+                        {
+                            console.log('ммммм');
+                            if (this.checkNeighbour(leftCell, 'Field') && leftCell.rabbits != 3 && leftCell.rabbits + 1 <= leftCell.grass) {
+                                console.log('Левая,', cell, leftCell);
+                                console.log(leftCell.rabbits + 1 <= leftCell.grass);
+                                leftCell.rabbits += 1;
+                                leftCell.grass -= 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
+                            else if (this.checkNeighbour(rightCell, 'Field') && rightCell.rabbits != 3 && rightCell.rabbits + 1 <= rightCell.grass) {
+                                console.log('Правая,', cell, rightCell);
+                                console.log(rightCell.rabbits + 1 <= rightCell.grass);
+                                rightCell.rabbits += 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
+                            else if (this.checkNeighbour(topCell, 'Field') && topCell.rabbits != 3 && topCell.rabbits + 1 <= topCell.grass) {
+                                console.log('Верхняя', cell, topCell);
+                                console.log(topCell.rabbits + 1 <= topCell.grass, );
+                                topCell.rabbits += 1;
+                                topCell.grass -= 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
+                            else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.rabbits != 3 && bottomCell.rabbits + 1 <= bottomCell.grass) {
+                                console.log('Нижняя', cell, bottomCell);
+                                console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
+                                bottomCell.rabbits += 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+                            else {
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+                        }
+                    }
+                    cell['grass'] -= cell['rabbits']
+                }
+            },
+
             // В зависимости от соседней ячейке появляется трава или нет
-            processingCell(currentCell, rightCell, leftCell, topCell, bottomCell) {
-                // Если ячейка справа существует
-                console.log(currentCell);
-                
-                if (typeof rightCell !== 'undefined' && this.checkNeighbour(rightCell)) {
-                    // Если соседняя ячейка справа явялется водой и у текущей ячейке существует солнце
+            processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell) {
+                // Если ячейка справа существует и соседняя ячейка справа явялется водой
+                if (this.checkNeighbour(rightCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
                     if (currentCell['sun'] > 0) {
-                        increaseJuiciness(currentCell);
+                        this.increaseJuiciness(currentCell);
                     }
                     else {
                         this.liveGrass(currentCell);
                     }
                 }
 
-                // Если ячейка слева существует
-                else if (typeof leftCell !== 'undefined' && this.checkNeighbour(leftCell)) {
-                    // Если соседняя ячейка слева явялется водой и у текущей ячейке существует солнце
+                // Если ячейка слева существует и соседняя ячейка слева явялется водой
+                else if (this.checkNeighbour(leftCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
                     if (currentCell['sun'] > 0) {
-                         increaseJuiciness(currentCell);
+                         this.increaseJuiciness(currentCell);
                     }
                     else {
                         this.liveGrass(currentCell);
                     }
                 }
 
-                // Если ячейка сверху существует
-                else if (typeof topCell !== 'undefined' && this.checkNeighbour(topCell)) {
-                    // Если соседняя ячейка сверху явялется водой и у текущей ячейке существует солнце
+                // Если ячейка сверху существует и соседняя ячейка сверху явялется водой
+                else if (this.checkNeighbour(topCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
                     if ( currentCell['sun'] > 0) {
-                         increaseJuiciness(currentCell);
+                         this.increaseJuiciness(currentCell);
                     }
                     else {
                         this.liveGrass(currentCell);
                     }
                 }
 
-                // Если ячейка снизу существует
-                else if (typeof bottomCell !== 'undefined' && this.checkNeighbour(bottomCell)) {
-                    // Если соседняя ячейка снизу явялется водой и у текущей ячейке существует солнце
+                // Если ячейка снизу существует и соседняя ячейка снизу явялется водой
+                else if (this.checkNeighbour(bottomCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
                     if ( currentCell['sun'] > 0) {
-                         increaseJuiciness(currentCell);
+                         this.increaseJuiciness(currentCell);
                     }
                     else {
                         this.liveGrass(currentCell);
@@ -275,8 +347,16 @@
                     this.increaseJuiciness(currentCell);
                 }
             },
+
+            autoLife() {
+                this.life = setInterval(this.nextTick, 1000);
+            },
+
+            stopLife() {
+                clearInterval(this.life);
+            },
             
-            generationWWeather(currentCell) {
+            generationWeather(currentCell) {
                 currentCell['sun'] = this.getRandomInt(0, 3);
                 currentCell['rain'] = this.getRandomInt(0, 3);
 
@@ -287,27 +367,27 @@
             },
 
             increaseJuiciness(cell) {
-                cell['grass'] += 1 ? cell['grass'] != 5 : cell['grass'];
+                cell.grass = (cell.grass != 5) ? cell.grass + 1 : cell['grass'];
             },
 
             reduceJuiciness(cell) {
-                cell['grass'] -= 1 ? cell['grass'] != 0 : cell['grass'];
+                cell.grass = (cell.grass != 0) ? cell.grass - 1 : cell['grass'];
             },
 
             increaseRain(cell) {
-                cell['rain'] += 1 ? cell['rain'] != 3 : cell['rain'];
+                cell.rain = (cell.rain != 3) ? cell.rain + 1 : cell.rain
             },
 
             reduceRain(cell) {
-                cell['rain'] -= 1 ? cell['rain'] != 0 : cell['rain'];
+                cell.rain = (cell.rain != 0) ? cell.rain - 1 : cell.rain
             },
 
             increaseSun(cell) {
-                cell['sun'] += 1 ? cell['sun'] != 3 : cell['sun'];
+                cell.sun = (cell.sun != 3) ? cell.sun + 1 : cell.sun
             }, 
 
             reduceSun(cell) {
-                cell['sun'] -= 1 ? cell['sun'] != 0 : cell['sun'];
+                cell.sun = (cell.sun != 0) ? cell.sun - 1 : cell.sun
             }
 
         }

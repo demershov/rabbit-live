@@ -30,6 +30,7 @@
                         rain: this.getRandomInt(0, 3),
                         sun: this.getRandomInt(0, 3),
                         grass: 0,
+                        rabbits: 0,
                     }
                     if (cell['rain'] === 3) {
                         cell['sun'] = 0;
