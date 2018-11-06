@@ -1,9 +1,15 @@
 <template>
   <div id="app">
-    <div class="section auth">
-      <auth :map="[]" :track="track"></auth>
+    <div class="hero auth is-fullheight" :style="{display: viewAuth}">
+      <div class="hero-body">
+        <div class="container">
+          <auth :map="[]" :track="track" :viewAuth.sync="viewAuth" @display-none="viewAuth = 'none'; viewMap = 'block'"></auth>  
+        </div>
+        
+      </div>
+      
     </div>
-    <div class="section">
+    <div class="section" :style="{display: viewMap}">
       <mapa :tacts="track" />
     </div>
   </div>
@@ -20,6 +26,8 @@ export default {
     return {
       array: [],
       track: [],
+      viewAuth: 'flex',
+      viewMap: 'none'
     }
   },
   components: {
