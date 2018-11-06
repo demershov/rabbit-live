@@ -68,8 +68,6 @@
 </template>
 
 <script>
-    
-    
     export default {
         data () {
             return {
@@ -118,7 +116,7 @@
                 
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
-                    document.getElementById('myUniqueId').style.top = event.screenY + 'px'
+                    document.getElementById('myUniqueId').style.top = `${event.screenY}px`
                 }
             },
 
