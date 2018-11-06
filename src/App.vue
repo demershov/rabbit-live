@@ -70,7 +70,8 @@ a {
 }
 
 ::-webkit-scrollbar {
-    width: 5px;
+    width: 8px;
+    height: 8px
 }
 
 ::-webkit-scrollbar-track {
@@ -86,7 +87,4 @@ a {
     background: #634A99; 
 }
 
-.fa-chevron-circle-up {
-  color: #7957d5;
-}
 </style>
