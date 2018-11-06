@@ -1,35 +1,58 @@
 <template>
     <div class="container">
-        <div class="columns">
-            <div class="column">
-                <button class="button is-primary" @click="previousTick()">Предыдущий Такс</button>
-                <button class="button is-primary" @click="nextTick()">Следующий Такт</button>
+        
+        <div class="columns is-centered is-1 is-variable">
+            <div class="column is-narrow">
                 <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
-                <button class="button is-primary" @click="autoLife()">Поехали</button>
-                <button class="button is-primary" @click="stopLife()">Приехали</button>
+            </div>
+            <div class="column is-narrow">
+                <button class="button is-primary" @click="addHunters()">Добавить охотников</button>
+            </div>
+        </div>
+
+        <div class="columns is-centered is-1 is-variable">
+            <div class="column is-narrow">
+                <button class="button is-info" @click="previousTick()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-angle-left"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="column is-narrow">
+                <!-- Старт -->
+                <button class="button is-success" @click="autoLife()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-play"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="column is-narrow">
+                <!-- Стоп  -->
+                <button class="button is-danger" @click="stopLife()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-stop"></i>
+                    </span>
+                </button>
+            </div>
+
+            <div class="column is-narrow">
+                <button class="button is-info" @click="nextTick()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-angle-right"></i>
+                    </span>
+                </button>
             </div>
         </div>
         <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
         <p v-if="tacts.length > 0">Текущий такт: {{ tact + 1 }}</p>
         <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
             <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
-
                 <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
                 <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun > 0">
                 <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass > 0">
+                <img :src="'./src/assets/rabbit' + cell.rabbits + '.png'" alt="" srcset="" class="img-rabbits" v-if="cell.rabbits > 0">
+                <img :src="'./src/assets/hunter' + cell.hunters + '.png'" alt="" srcset="" class="img-hunters" v-if="cell.hunters > 0">
                 <br>
-                <i v-if="cell.rabbits != 0">Кролики - {{ cell.rabbits }}</i>
-               
-               <!-- Дождь = {{ cell.rain }}
-               Солнце = {{ cell.sun }}
-               Тип = {{ cell.type }}
-               Трава {{ cell.grass }} -->
-               
-               <!-- <div class="item-wrapper">
-                    <div v-for="(item, index) in tacts[tact][indexRow][indexCell]" @click.prevent.stop="handleClick($event, item)" class="item-wrapper__item" :key="index">
-                        {{item.name}}
-                    </div>
-                </div> -->
             </div>
         </div>
         
@@ -54,6 +77,7 @@
                 array: [],
                 life: 0,
                 rabbitsLive: false,
+                huntersLive: false,
                 options: [
                     {
                         name: 'Увеличить сочность',
@@ -89,9 +113,12 @@
         },
         props: ['tacts'],
         methods: {
-            handleClick (event, item, indexRow, indexCell) {
-                if(this.tact === this.tacts.length - 1) {
+            handleClick (event, item) {
+                console.log(event);
+                
+                if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
+                    document.getElementById('myUniqueId').style.top = event.screenY + 'px'
                 }
             },
 
@@ -158,23 +185,15 @@
 
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
-                            this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell)
                             this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell)
+                            this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell)
                         }
                         this.generationWeather(currentCell);
                     
                     }
                 }
                 this.tacts.push(this.array)
-            },
-
-            checkNeighbour(cell, type) {
-                if (typeof cell !== 'undefined' && cell.type === type) {
-                    return true
-                }
-                else {
-                    return false
-                }
             },
 
             addRabbits() {
@@ -191,15 +210,27 @@
                 }
             },
 
-            proccessingRabbits(cell, rightCell, leftCell, topCell, bottomCell) {
-                if(cell.rabbits == 2) {
-                    cell.rabbits++;
+            addHunters() {
+                this.array = this.tacts[this.tact];
+                this.huntersLive = true;
+                for (let i = 0; i < this.array.length; i++) {
+                    for (let j = 0; j < this.array[i].length; j++) {
+                        let currentCell = this.array[i][j];
+                        // Если данная ячейка является полем
+                        if (currentCell['type'] === 'Field') {
+                            currentCell['hunters'] = this.getRandomInt(0, 3);
+                        }
+                    }
                 }
+            },
 
+            proccessingRabbits(cell, rightCell, leftCell, topCell, bottomCell) {
                 if (this.rabbitsLive && cell.rabbits > 0) {
-                    console.log(this.tact, cell, '1');
-                    if (cell.rabbits > cell.grass || cell.rabbits === 3) {
-                        
+                    if(cell.rabbits == 2) {
+                        cell.rabbits++;
+                    }
+
+                    if (cell.rabbits > cell.grass) {
                         let hungryRabbits = (cell.rabbits - cell.grass > 0) ? cell.rabbits - cell.grass : 0;
                         console.log('Зашел!', cell, hungryRabbits);
                         while(hungryRabbits != 0)
@@ -245,6 +276,54 @@
                         }
                     }
                     cell['grass'] -= cell['rabbits']
+                }
+            },
+
+            proccessingHunters(cell, rightCell, leftCell, topCell, bottomCell) {
+                if (this.huntersLive && cell.hunters > 0) {
+                    if (cell.hunters > cell.rabbits) {
+                        let freeHunters = (cell.hunters - cell.rabbits > 0) ? cell.hunters - cell.rabbits : 0;
+                        while(freeHunters != 0)
+                        {
+                            if (this.checkNeighbour(leftCell, 'Field') && leftCell.hunters != 3 && leftCell.hunters + 1 <= leftCell.rabbits) {
+                                // console.log('Левая,', cell, leftCell);
+                                // console.log(leftCell.rabbits + 1 <= leftCell.grass);
+                                leftCell.hunters += 1;
+                                leftCell.rabbits -= 1;
+                                freeHunters--;
+                                cell.hunters -= 1;
+                            }
+
+                            else if (this.checkNeighbour(rightCell, 'Field') && rightCell.hunters != 3 && rightCell.hunters + 1 <= rightCell.rabbits) {
+                                // console.log('Правая,', cell, rightCell);
+                                // console.log(rightCell.rabbits + 1 <= rightCell.grass);
+                                rightCell.hunters += 1;
+                                freeHunters--;
+                                cell.hunters -= 1;
+                            }
+
+                            else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
+                                // console.log('Верхняя', cell, topCell);
+                                // console.log(topCell.rabbits + 1 <= topCell.grass, );
+                                topCell.hunters += 1;
+                                topCell.rabbits -= 1;
+                                freeHunters--;
+                                cell.hunters -= 1;
+                            }
+
+                            else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.hunters != 3 && bottomCell.hunters + 1 <= bottomCell.rabbits) {
+                                // console.log('Нижняя', cell, bottomCell);
+                                // console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
+                                bottomCell.hunters += 1;
+                                freeHunters--;
+                                cell.hunters -= 1;
+                            }
+                            else {
+                                freeHunters--;
+                            }
+                        }
+                    }
+                    cell['rabbits'] = (cell.hunters > cell.rabbits) ? 0 : cell.rabbits - cell.hunters;
                 }
             },
 
@@ -355,6 +434,15 @@
             stopLife() {
                 clearInterval(this.life);
             },
+
+            checkNeighbour(cell, type) {
+                if (typeof cell !== 'undefined' && cell.type === type) {
+                    return true
+                }
+                else {
+                    return false
+                }
+            },
             
             generationWeather(currentCell) {
                 currentCell['sun'] = this.getRandomInt(0, 3);
@@ -427,11 +515,25 @@
         position: relative;
         right: -20%;
     }
-    .img-grass {
+
+
+    .img-grass, .img-rabbits, .img-hunters {
         position: absolute;
         bottom: 0;
         left: 10px;
+        z-index: 3;
     }
+
+    .img-rabbits {
+        z-index: 2;
+    }
+
+    .img-hunters {
+        z-index: 1;
+        bottom: 30px;
+        left: 45px;
+    }
+
     .Water {
         background-color: #1fc8db;
     }
@@ -456,6 +558,4 @@
         background-image: url('../assets/water.png');
     }
     
-
-
 </style>
