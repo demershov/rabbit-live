@@ -1,6 +1,5 @@
 <template>
     <div class="container">
-        
         <div class="columns is-centered is-1 is-variable">
             <div class="column is-narrow">
                 <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
@@ -45,7 +44,7 @@
         </div>
         <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
         <p v-if="tacts.length > 0">Текущий такт: {{ tact + 1 }}</p>
-        <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
+        <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row " :style="{padding: (tacts[tact].length > 5) ? '0px 100px 0px 0px' : '0'}">
             <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
                 <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
                 <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun > 0">
@@ -87,6 +86,16 @@
                         slug: 'reduceJuiciness'
                     },
 
+                    // {
+                    //     name: 'Увеличить кол-во кроликов',
+                    //     slug: 'increaseRabbits'
+                    // },
+
+                    // {
+                    //     name: 'Уменьшить кол-во кроликов',
+                    //     slug: 'reduceRabbits'
+                    // },
+
                     {
                         name: 'Добавить интенсивность дождя',
                         slug: 'increaseRain'
@@ -111,9 +120,7 @@
         },
         props: ['tacts'],
         methods: {
-            handleClick (event, item) {
-                console.log(event);
-                
+            handleClick (event, item) {  
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
                     document.getElementById('myUniqueId').style.top = `${event.screenY}px`
@@ -239,7 +246,7 @@
                                 console.log(leftCell.rabbits + 1 <= leftCell.grass);
                                 leftCell.rabbits += 1;
                                 leftCell.grass -= 1;
-                                hungryRabbits--;
+                                hungryRabbits -= 1;
                                 cell.rabbits -= 1;
                             }
 
@@ -247,7 +254,7 @@
                                 console.log('Правая,', cell, rightCell);
                                 console.log(rightCell.rabbits + 1 <= rightCell.grass);
                                 rightCell.rabbits += 1;
-                                hungryRabbits--;
+                                hungryRabbits -= 1;
                                 cell.rabbits -= 1;
                             }
 
@@ -256,7 +263,7 @@
                                 console.log(topCell.rabbits + 1 <= topCell.grass, );
                                 topCell.rabbits += 1;
                                 topCell.grass -= 1;
-                                hungryRabbits--;
+                                hungryRabbits -= 1;
                                 cell.rabbits -= 1;
                             }
 
@@ -264,11 +271,11 @@
                                 console.log('Нижняя', cell, bottomCell);
                                 console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
                                 bottomCell.rabbits += 1;
-                                hungryRabbits--;
+                                hungryRabbits -= 1;
                                 cell.rabbits -= 1;
                             }
                             else {
-                                hungryRabbits--;
+                                hungryRabbits -= 1;
                                 cell.rabbits -= 1;
                             }
                         }
@@ -287,41 +294,42 @@
                                 // console.log('Левая,', cell, leftCell);
                                 // console.log(leftCell.rabbits + 1 <= leftCell.grass);
                                 leftCell.hunters += 1;
-                                leftCell.rabbits -= 1;
-                                freeHunters--;
                                 cell.hunters -= 1;
+                                leftCell.rabbits -= 1;
+                                freeHunters -= 1;
                             }
 
                             else if (this.checkNeighbour(rightCell, 'Field') && rightCell.hunters != 3 && rightCell.hunters + 1 <= rightCell.rabbits) {
                                 // console.log('Правая,', cell, rightCell);
                                 // console.log(rightCell.rabbits + 1 <= rightCell.grass);
                                 rightCell.hunters += 1;
-                                freeHunters--;
                                 cell.hunters -= 1;
+                                freeHunters -= 1;
                             }
 
                             else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
                                 // console.log('Верхняя', cell, topCell);
                                 // console.log(topCell.rabbits + 1 <= topCell.grass, );
                                 topCell.hunters += 1;
-                                topCell.rabbits -= 1;
-                                freeHunters--;
                                 cell.hunters -= 1;
+                                topCell.rabbits -= 1;
+                                freeHunters -= 1;
+                                
                             }
 
                             else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.hunters != 3 && bottomCell.hunters + 1 <= bottomCell.rabbits) {
                                 // console.log('Нижняя', cell, bottomCell);
                                 // console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
                                 bottomCell.hunters += 1;
-                                freeHunters--;
                                 cell.hunters -= 1;
+                                freeHunters -= 1;
                             }
                             else {
-                                freeHunters--;
+                                freeHunters -= 1;
                             }
                         }
                     }
-                    cell['rabbits'] = (cell.hunters > cell.rabbits) ? 0 : cell.rabbits - cell.hunters;
+                    cell.rabbits = (cell.hunters > cell.rabbits) ? 0 : cell.rabbits - cell.hunters;
                 }
             },
 
@@ -445,7 +453,6 @@
             generationWeather(currentCell) {
                 currentCell['sun'] = this.getRandomInt(0, 3);
                 currentCell['rain'] = this.getRandomInt(0, 3);
-
             },
 
             getRandomInt(min, max) {
