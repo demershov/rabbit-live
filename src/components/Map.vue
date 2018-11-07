@@ -55,8 +55,9 @@
                 <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass > 0">
                 <img :src="'./src/assets/rabbit' + cell.rabbits + '.png'" alt="" srcset="" class="img-rabbits" v-if="cell.rabbits > 0">
                 <img :src="'./src/assets/hunter' + cell.hunters + '.png'" alt="" srcset="" class="img-hunters" v-if="cell.hunters > 0">
+                <img :src="'./src/assets/wolf' + cell.wolves + '.png'" alt="" srcset="" class="img-wolves" v-if="cell.wolves > 0">
                 <br>
-                <i v-if="cell.wolves != 0">Волки - {{ cell.wolves }}</i>
+                <!-- <i v-if="cell.wolves != 0">Волки - {{ cell.wolves }}</i> -->
             </div>
         </div>
         
@@ -753,21 +754,29 @@
     }
 
 
-    .img-grass, .img-rabbits, .img-hunters {
+    .img-grass, .img-rabbits, .img-hunters, .img-wolves {
         position: absolute;
         bottom: 0;
         left: 10px;
-        z-index: 3;
+        z-index: 4;
     }
 
     .img-rabbits {
-        z-index: 2;
+        z-index: 3;
     }
 
     .img-hunters {
-        z-index: 1;
+        z-index: 2;
         bottom: 30px;
         left: 45px;
+    }
+
+    .img-wolves {
+        width: 65%;
+        z-index: 1;
+        top: 55px;
+        left: 40px;
+        opacity: 0.8;
     }
 
     .Water {
