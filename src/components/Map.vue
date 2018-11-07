@@ -1,30 +1,10 @@
 <template>
-    <div class="container">
-        
-        <div class="columns is-centered is-1 is-variable">
-            <div class="column is-narrow">
-                <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
-            </div>
-            <div class="column is-narrow">
-                <button class="button is-primary" @click="addHunters()">Добавить охотников</button>
-            </div>
-            <div class="column is-narrow">
-                <button class="button is-primary" @click="addWolves()">Добавить волков</button>
-            </div>
-        </div>
-
-        <div class="columns is-centered is-1 is-variable" style="display: flex; flex-direction: column; position: fixed;margin-left: -135px;top: 50%;">
+    <div>
+        <div class="columns is-centered left-menu">
             <div class="column is-narrow">
                 <button class="button is-info" @click="previousTick()">
                     <span class="icon is-medium">
                         <i class="fa fa-angle-left"></i>
-                    </span>
-                </button>
-            </div>
-            <div class="column is-narrow">
-                <button class="button is-info" @click="nextTick()">
-                    <span class="icon is-medium">
-                        <i class="fa fa-angle-right"></i>
                     </span>
                 </button>
             </div>
@@ -45,31 +25,60 @@
                 </button>
             </div>
 
-            <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
-            <p v-if="tacts.length > 0">Текущий такт: {{ tact + 1 }}</p>
-        </div>
-        <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
-            <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @click.prevent.stop="handleClick($event, [indexRow, indexCell])">
-                <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
-                <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun > 0">
-                <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass > 0">
-                <img :src="'./src/assets/rabbit' + cell.rabbits + '.png'" alt="" srcset="" class="img-rabbits" v-if="cell.rabbits > 0">
-                <img :src="'./src/assets/hunter' + cell.hunters + '.png'" alt="" srcset="" class="img-hunters" v-if="cell.hunters > 0">
-                <img :src="'./src/assets/wolf' + cell.wolves + '.png'" alt="" srcset="" class="img-wolves" v-if="cell.wolves > 0">
-                <br>
-                <!-- <i v-if="cell.wolves != 0">Волки - {{ cell.wolves }}</i> -->
+            <div class="column is-narrow">
+                <button class="button is-info" @click="nextTick()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-angle-right"></i>
+                    </span>
+                </button>
             </div>
         </div>
         
-        <vue-simple-context-menu
-            :id="'myUniqueId'"
-            :options="options"
-            :ref="'vueSimpleContextMenu'"
-            @optionClicked="optionClicked">
-        </vue-simple-context-menu>
+        <div class="container">
+            <div class="columns is-centered is-1 is-variable settings">
+                <div class="column is-narrow">
+                    <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
+                </div>
+                <div class="column is-narrow">
+                    <button class="button is-primary" @click="addHunters()">Добавить охотников</button>
+                </div>
+                <div class="column is-narrow">
+                    <button class="button is-primary" @click="addWolves()">Добавить волков</button>
+                </div>
+            </div>
+            <div class="container is-centered">
+                <h1 class="is-size-3 has-text-centered">
+                    ВСЕГО ТАКТОВ: {{tacts.length}}
+                </h1>
+                <h2 class="is-size-4">
+                    Текущий такт: {{ tact + 1 }}
+                </h2>
 
-        
+            </div>
+            <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
+                <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
+                    <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
+                    <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun > 0">
+                    <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass > 0">
+                    <img :src="'./src/assets/rabbit' + cell.rabbits + '.png'" alt="" srcset="" class="img-rabbits" v-if="cell.rabbits > 0">
+                    <img :src="'./src/assets/hunter' + cell.hunters + '.png'" alt="" srcset="" class="img-hunters" v-if="cell.hunters > 0">
+                    <img :src="'./src/assets/wolf' + cell.wolves + '.png'" alt="" srcset="" class="img-wolves" v-if="cell.wolves > 0">
+                    <br>
+                    <!-- <i v-if="cell.wolves != 0">Волки - {{ cell.wolves }}</i> -->
+                </div>
+            </div>
+            
+            <vue-simple-context-menu
+                :id="'myUniqueId'"
+                :options="options"
+                :ref="'vueSimpleContextMenu'"
+                @optionClicked="optionClicked">
+            </vue-simple-context-menu>
+
+            
+        </div>
     </div>
+    
 </template>
 
 <script>
@@ -288,7 +297,7 @@
             proccessingRabbits(cell, rightCell, leftCell, topCell, bottomCell) {
                 if (this.rabbitsLive && cell.rabbits > 0) {
                     if(cell.rabbits == 2) {
-                        cell.rabbits++;
+                        cell.rabbits += 1;
                     }
 
                     if (cell.rabbits > cell.grass) {
@@ -714,45 +723,46 @@
 
 <style>
     .container {
-        margin-bottom: 15px;
         display:flex;
         flex-direction: column;
     }
+
+    .settings {
+        padding-top: 15px;
+    }
+
+    .left-menu {
+        display: flex; 
+        flex-direction: column; 
+        position: fixed; 
+        z-index: 2; 
+        height: 100vh; 
+        background-color: #f1f1f1;
+        margin: 0;
+    }
+    
     .row {
-        /* background-color: #f32563; */
-        /* width: 100%;
-        max-width: 1470px; */
         height: 100%;
-        /* padding: 10px 0px 5px; */
-        /* display: inline-grid; */
         display: flex;
-        /* justify-content: center; */
         margin: 0 auto;
-        /* flex-wrap: wrap; */
-        /* grid-column: 1/span 1; */
-        /* grid-gap: 5px; */
     }
 
     .cell {
-        /* background-color: #81c1f5; */
         min-width: 220px;
         height: 200px;
-        /* border: 1px solid #000; */
-        /* grid-row: 1/span 1; */
         padding: 0;
-        /* background-image: url(); */
         position: relative;
-        /* grid-gap: 5px; */
     }
+
     .img-sun, .img-rain {   
         width: 30%;
         right: 0;
     }
+
     .img-rain {
         position: relative;
         right: -20%;
     }
-
 
     .img-grass, .img-rabbits, .img-hunters, .img-wolves {
         position: absolute;
@@ -782,9 +792,7 @@
     .Water {
         background-color: #1fc8db;
     }
-    /* .Field {
-        background-color: #;
-    } */
+
     .Hill, .Water, .Field {
         background-repeat: no-repeat;
         background-position: center center;
