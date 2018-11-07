@@ -8,6 +8,9 @@
             <div class="column is-narrow">
                 <button class="button is-primary" @click="addHunters()">Добавить охотников</button>
             </div>
+            <div class="column is-narrow">
+                <button class="button is-primary" @click="addWolves()">Добавить волков</button>
+            </div>
         </div>
 
         <div class="columns is-centered is-1 is-variable">
@@ -53,6 +56,7 @@
                 <img :src="'./src/assets/rabbit' + cell.rabbits + '.png'" alt="" srcset="" class="img-rabbits" v-if="cell.rabbits > 0">
                 <img :src="'./src/assets/hunter' + cell.hunters + '.png'" alt="" srcset="" class="img-hunters" v-if="cell.hunters > 0">
                 <br>
+                <i v-if="cell.wolves != 0">Волки - {{ cell.wolves }}</i>
             </div>
         </div>
         
@@ -76,6 +80,7 @@
                 life: 0,
                 rabbitsLive: false,
                 huntersLive: false,
+                wolvesLive: false,
                 options: [
                     {
                         name: 'Увеличить сочность',
@@ -105,6 +110,26 @@
                     {
                         name: 'Уменьшить температуру',
                         slug: 'reduceSun',
+                    },
+
+                    {
+                        name: 'Добавить охотника',
+                        slug: 'increaseHunters',
+                    },
+
+                    {
+                        name: 'Убрать охотника',
+                        slug: 'reduceHunters',
+                    },
+
+                    {
+                        name: 'Добавить волка',
+                        slug: 'increaseWolves',
+                    },
+
+                    {
+                        name: 'Убрать волка',
+                        slug: 'reduceWolves',
                     },
                 ]
             }
@@ -149,6 +174,22 @@
                 else if(method === 'reduceSun') {
                     this.reduceSun(cell);
                 }
+
+                else if(method === 'increaseHunters') {
+                    this.increaseHunters(cell);
+                }
+
+                else if(method === 'reduceHunters') {
+                    this.reduceHunters(cell);
+                }
+
+                else if(method === 'increaseWolves') {
+                    this.increaseWolves(cell);
+                }
+
+                else if(method === 'reduceWolves') {
+                    this.reduceWolves(cell);
+                }
             },
 
             previousTick() {
@@ -186,6 +227,7 @@
                             this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
                             this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell)
                             this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell)
+                            this.processingWovles(currentCell, rightCell, leftCell, topCell, bottomCell)
                         }
                         this.generationWeather(currentCell);
                     
@@ -217,6 +259,20 @@
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
                             currentCell['hunters'] = this.getRandomInt(0, 3);
+                        }
+                    }
+                }
+            },
+
+            addWolves() {
+                this.array = this.tacts[this.tact];
+                this.wolvesLive = true;
+                for (let i = 0; i < this.array.length; i++) {
+                    for (let j = 0; j < this.array[i].length; j++) {
+                        let currentCell = this.array[i][j];
+                        // Если данная ячейка является полем
+                        if (currentCell['type'] === 'Field') {
+                            currentCell['wolves'] = this.getRandomInt(0, 3);
                         }
                     }
                 }
@@ -322,6 +378,108 @@
                         }
                     }
                     cell['rabbits'] = (cell.hunters > cell.rabbits) ? 0 : cell.rabbits - cell.hunters;
+                }
+            },
+
+            processingWovles(cell, rightCell, leftCell, topCell, bottomCell) {
+                if (this.wolvesLive && cell.wolves > 0) {
+                    if (this.huntersLive) {
+                        // Если охотники заспаунены, сначала все терки с ними
+                        if (cell.wolves == cell.hunters) {
+                            // Разбегаются по клеткам, если это возможно в принципе (бывает, что некоторых придется оставить на месте)
+                            this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            if (cell.wolves == cell.hunters) {
+                                // Если после разброса по клеткам друг от друга, в клетке снова остаются
+                                // клиенты, причем в равном количестве, я их уничтожаю,
+                                // ибо девать их просто некуда.
+                                // Условия такого в задаче нет, это личные соображения.
+                                cell.wolves = 0;
+                                cell.hunters = 0;
+                            }
+                        }
+
+                        // --------------------------------------------------------------------------- //
+                        // В зависимости от того, кого больше, убиваем / перемещаем
+                        else if (cell.wolves > cell.hunters) {
+                            cell.hunters--;
+                            if (cell.hunters > 0) {
+                                this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            }
+                        }
+
+                        else if (cell.wolves < cell.hunters) {
+                            cell.wolves--;
+                            if (cell.wolves > 0) {
+                                this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            }
+                        }
+                        // --------------------------------------------------------------------------- /
+                    }
+
+                    if (this.rabbitsLive) {
+                        // Если в текущей клетке встретились кролики, волки их жрут за тик от 1 до 3 (по условию).
+                        // С остающимися кроликами не придумал, что сделать. Либо рассовывать их так же, как
+                        // волков и охотников вообще по любым ячейкам, либо оставлять на месте?
+                        cell.rabbits -= this.getRandomInt(1, cell.rabbits < 3 ? cell.rabbits : 2);
+                        // putRabbitsSomewhere().exe
+                    }
+                }
+            },
+
+            moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell) {
+                let huntersLeft = cell.hunters;
+                while (huntersLeft != 0) {
+                    if (typeof leftCell !== 'undefined' && leftCell.hunters != 3 && leftCell.wolves == 0) {
+                        leftCell.hunters++;
+                        huntersLeft--;
+                        cell.hunters--;
+                    }
+                    else if (typeof rightCell !== 'undefined' && rightCell.hunters != 3 && rightCell.wolves == 0) {
+                        rightCell.hunters++;
+                        huntersLeft--;
+                        cell.hunters--;
+                    }
+                    else if (typeof topCell !== 'undefined' && topCell.hunters != 3 && topCell.wolves == 0) {
+                        topCell.hunters++;
+                        huntersLeft--;
+                        cell.hunters--;
+                    }
+                    else if (typeof bottomCell !== 'undefined' && bottomCell.hunters != 3 && bottomCell.wolves == 0) {
+                        bottomCell.hunters++;
+                        huntersLeft--;
+                        cell.hunters--;
+                    } else {
+                        huntersLeft--;
+                    }
+                }
+            },
+
+            moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell) {
+                let wolvesLeft = cell.wolves;
+                while (wolvesLeft != 0) {
+                    if (typeof leftCell !== 'undefined' && leftCell.wolves != 3 && leftCell.hunters == 0) {
+                        leftCell.wolves++;
+                        wolvesLeft--;
+                        cell.wolves--;
+                    }
+                    else if (typeof rightCell !== 'undefined' && rightCell.wolves != 3 && rightCell.hunters == 0) {
+                        rightCell.wolves++;
+                        wolvesLeft--;
+                        cell.wolves--;
+                    }
+                    else if (typeof topCell !== 'undefined' && topCell.wolves != 3 && topCell.hunters == 0) {
+                        topCell.wolves++;
+                        wolvesLeft--;
+                        cell.wolves--;
+                    }
+                    else if (typeof bottomCell !== 'undefined' && bottomCell.wolves != 3 && bottomCell.hunters == 0) {
+                        bottomCell.wolves++;
+                        wolvesLeft--;
+                        cell.wolves--;
+                    } else {
+                        wolvesLeft--;
+                    }
                 }
             },
 
@@ -474,7 +632,23 @@
 
             reduceSun(cell) {
                 cell.sun = (cell.sun != 0) ? cell.sun - 1 : cell.sun
-            }
+            },
+
+            increaseHunters(cell) {
+                cell.hunters = (cell.hunters != 3) ? cell.hunters + 1 : cell.hunters
+            },
+
+            reduceHunters(cell) {
+                cell.hunters = (cell.hunters != 0) ? cell.hunters - 1 : cell.hunters
+            },
+
+            increaseWolves(cell) {
+                cell.wolves = (cell.wolves != 3) ? cell.wolves + 1 : cell.wolves
+            },
+            
+            reduceWolves(cell) {
+                cell.wolves = (cell.wolves != 0) ? cell.wolves - 1 : cell.wolves
+            },
 
         }
     }
