@@ -65,6 +65,7 @@
                         grass: 0,
                         rabbits: 0,
                         hunters: 0,
+                        wolves: 0,
                     }
                     if (cell['rain'] === 3) {
                         cell['sun'] = 0;
