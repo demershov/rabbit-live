@@ -13,11 +13,18 @@
             </div>
         </div>
 
-        <div class="columns is-centered is-1 is-variable">
+        <div class="columns is-centered is-1 is-variable" style="display: flex; flex-direction: column; position: fixed;margin-left: -135px;top: 50%;">
             <div class="column is-narrow">
                 <button class="button is-info" @click="previousTick()">
                     <span class="icon is-medium">
                         <i class="fa fa-angle-left"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="column is-narrow">
+                <button class="button is-info" @click="nextTick()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-angle-right"></i>
                     </span>
                 </button>
             </div>
@@ -38,18 +45,11 @@
                 </button>
             </div>
 
-            <div class="column is-narrow">
-                <button class="button is-info" @click="nextTick()">
-                    <span class="icon is-medium">
-                        <i class="fa fa-angle-right"></i>
-                    </span>
-                </button>
-            </div>
+            <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
+            <p v-if="tacts.length > 0">Текущий такт: {{ tact + 1 }}</p>
         </div>
-        <p>ВСЕГО ТАКТОВ: {{tacts.length}}</p>
-        <p v-if="tacts.length > 0">Текущий такт: {{ tact + 1 }}</p>
         <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
-            <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
+            <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @click.prevent.stop="handleClick($event, [indexRow, indexCell])">
                 <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
                 <img :src="'./src/assets/sun' + cell.sun + '.png'" alt="" srcset="" class="img-sun" v-if="cell.sun > 0">
                 <img :src="'./src/assets/grass' + cell.grass + '.png'" alt="" srcset="" class="img-grass" v-if="cell.grass > 0">
@@ -130,7 +130,7 @@
                     {
                         name: 'Убрать волка',
                         slug: 'reduceWolves',
-                    },
+                    }
                 ]
             }
         },
@@ -141,7 +141,11 @@
                 
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
-                    document.getElementById('myUniqueId').style.top = `${event.screenY}px`
+                    let offsetY = document.getElementById('myUniqueId').style.top;
+                    let offsetX = document.getElementById('myUniqueId').style.left;
+                    document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
+                    document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
+
                 }
             },
 
@@ -202,6 +206,7 @@
                 
                 if (this.tact === this.tacts.length - 1) {
                     this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
+                    this.processClampUnitsOnInvalidCell();
                     this.calcCells();
                 }
                 else {
@@ -225,10 +230,11 @@
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
                             this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
-                            this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell)
-                            this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell)
-                            this.processingWovles(currentCell, rightCell, leftCell, topCell, bottomCell)
+                            this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.processingWovles(currentCell, rightCell, leftCell, topCell, bottomCell);
                         }
+
                         this.generationWeather(currentCell);
                     
                     }
@@ -335,49 +341,51 @@
 
             proccessingHunters(cell, rightCell, leftCell, topCell, bottomCell) {
                 if (this.huntersLive && cell.hunters > 0) {
-                    if (cell.hunters > cell.rabbits) {
-                        let freeHunters = (cell.hunters - cell.rabbits > 0) ? cell.hunters - cell.rabbits : 0;
-                        while(freeHunters != 0)
-                        {
-                            if (this.checkNeighbour(leftCell, 'Field') && leftCell.hunters != 3 && leftCell.hunters + 1 <= leftCell.rabbits) {
-                                // console.log('Левая,', cell, leftCell);
-                                // console.log(leftCell.rabbits + 1 <= leftCell.grass);
-                                leftCell.hunters += 1;
-                                leftCell.rabbits -= 1;
-                                freeHunters--;
-                                cell.hunters -= 1;
-                            }
-
-                            else if (this.checkNeighbour(rightCell, 'Field') && rightCell.hunters != 3 && rightCell.hunters + 1 <= rightCell.rabbits) {
-                                // console.log('Правая,', cell, rightCell);
-                                // console.log(rightCell.rabbits + 1 <= rightCell.grass);
-                                rightCell.hunters += 1;
-                                freeHunters--;
-                                cell.hunters -= 1;
-                            }
-
-                            else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
-                                // console.log('Верхняя', cell, topCell);
-                                // console.log(topCell.rabbits + 1 <= topCell.grass, );
-                                topCell.hunters += 1;
-                                topCell.rabbits -= 1;
-                                freeHunters--;
-                                cell.hunters -= 1;
-                            }
-
-                            else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.hunters != 3 && bottomCell.hunters + 1 <= bottomCell.rabbits) {
-                                // console.log('Нижняя', cell, bottomCell);
-                                // console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
-                                bottomCell.hunters += 1;
-                                freeHunters--;
-                                cell.hunters -= 1;
-                            }
-                            else {
-                                freeHunters--;
+                    if (cell.wolves == 0) {
+                        if (cell.hunters > cell.rabbits) {
+                            let freeHunters = (cell.hunters - cell.rabbits > 0) ? cell.hunters - cell.rabbits : 0;
+                            while(freeHunters != 0)
+                            {
+                                if (this.checkNeighbour(leftCell, 'Field') && leftCell.hunters != 3 && leftCell.hunters + 1 <= leftCell.rabbits) {
+                                    // console.log('Левая,', cell, leftCell);
+                                    // console.log(leftCell.rabbits + 1 <= leftCell.grass);
+                                    leftCell.hunters += 1;
+                                    leftCell.rabbits -= 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+    
+                                else if (this.checkNeighbour(rightCell, 'Field') && rightCell.hunters != 3 && rightCell.hunters + 1 <= rightCell.rabbits) {
+                                    // console.log('Правая,', cell, rightCell);
+                                    // console.log(rightCell.rabbits + 1 <= rightCell.grass);
+                                    rightCell.hunters += 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+    
+                                else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
+                                    // console.log('Верхняя', cell, topCell);
+                                    // console.log(topCell.rabbits + 1 <= topCell.grass, );
+                                    topCell.hunters += 1;
+                                    topCell.rabbits -= 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+    
+                                else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.hunters != 3 && bottomCell.hunters + 1 <= bottomCell.rabbits) {
+                                    // console.log('Нижняя', cell, bottomCell);
+                                    // console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
+                                    bottomCell.hunters += 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+                                else {
+                                    freeHunters--;
+                                }
                             }
                         }
+                        cell['rabbits'] = (cell.hunters > cell.rabbits) ? 0 : cell.rabbits - cell.hunters;
                     }
-                    cell['rabbits'] = (cell.hunters > cell.rabbits) ? 0 : cell.rabbits - cell.hunters;
                 }
             },
 
@@ -422,7 +430,9 @@
                         // С остающимися кроликами не придумал, что сделать. Либо рассовывать их так же, как
                         // волков и охотников вообще по любым ячейкам, либо оставлять на месте?
                         cell.rabbits -= this.getRandomInt(1, cell.rabbits < 3 ? cell.rabbits : 2);
-                        // putRabbitsSomewhere().exe
+                        if (cell.rabbits > 0) {
+                            this.moveRabbitsToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                        }
                     }
                 }
             },
@@ -479,6 +489,53 @@
                         cell.wolves--;
                     } else {
                         wolvesLeft--;
+                    }
+                }
+            },
+
+            moveRabbitsToCell(cell, rightCell, leftCell, topCell, bottomCell) {
+                let rabbitsLeft = cell.rabbits;
+                while (rabbitsLeft != 0) {
+                    if (typeof leftCell !== 'undefined' && leftCell.wolves == 0 && leftCell.hunters == 0) {
+                        leftCell.rabbits++;
+                        rabbitsLeft--;
+                        cell.rabbits--;
+                    }
+                    else if (typeof rightCell !== 'undefined' && rightCell.wolves == 0 && rightCell.hunters == 0) {
+                        rightCell.rabbits++;
+                        rabbitsLeft--;
+                        cell.rabbits--;
+                    }
+                    else if (typeof topCell !== 'undefined' && topCell.wolves == 0 && topCell.hunters == 0) {
+                        topCell.rabbits++;
+                        rabbitsLeft--;
+                        cell.rabbits--;
+                    }
+                    else if (typeof bottomCell !== 'undefined' && bottomCell.wolves == 0 && bottomCell.hunters == 0) {
+                        bottomCell.rabbits++;
+                        rabbitsLeft--;
+                        cell.rabbits--;
+                    } else {
+                        rabbitsLeft--;
+                    }
+                }
+            },
+
+            processClampUnitsOnInvalidCell() {
+                for (let i = 0; i < this.array.length; i++) {
+                    for (let j = 0; j < this.array[i].length; j++) {
+                        let cell = this.array[i][j];
+                        if (typeof cell !== 'undefined' && cell.type !== 'Field') {
+                            if (cell.hunters > 0) {
+                                cell.hunters = 0;
+                            }
+                            if (cell.wolves > 0) {
+                                cell.wolves = 0;
+                            }
+                            if (cell.rabbits > 0) {
+                                cell.rabbits = 0;
+                            }
+                        }
                     }
                 }
             },
@@ -657,23 +714,30 @@
 <style>
     .container {
         margin-bottom: 15px;
+        display:flex;
+        flex-direction: column;
     }
     .row {
         /* background-color: #f32563; */
-        /* width: 100%; */
+        /* width: 100%;
+        max-width: 1470px; */
         height: 100%;
         /* padding: 10px 0px 5px; */
-        display: inline-grid;
-        grid-column: 1/span 1;
+        /* display: inline-grid; */
+        display: flex;
+        /* justify-content: center; */
+        margin: 0 auto;
+        /* flex-wrap: wrap; */
+        /* grid-column: 1/span 1; */
         /* grid-gap: 5px; */
     }
 
     .cell {
         /* background-color: #81c1f5; */
-        width: 220px;
+        min-width: 220px;
         height: 200px;
         /* border: 1px solid #000; */
-        grid-row: 1/span 1;
+        /* grid-row: 1/span 1; */
         padding: 0;
         /* background-image: url(); */
         position: relative;
