@@ -100,7 +100,6 @@
                     // if (cell['sun'] === 3) {
                     //     cell['rain'] = 0;
                     // }
-
                     this.map[i].push(cell)
                 }
             }
