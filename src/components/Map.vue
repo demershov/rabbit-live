@@ -97,12 +97,12 @@
                     },
 
                     {
-                        name: 'Добавить интенсивность дождя',
+                        name: 'Добавить дождя',
                         slug: 'increaseRain'
                     },
 
                     {
-                        name: 'Уменьшить интенсивность дождя',
+                        name: 'Уменьшить дождь',
                         slug: 'reduceRain'
                     },
 
@@ -116,6 +116,16 @@
                         slug: 'reduceSun',
                     },
 
+                    {
+                        name: 'Добавить кролика',
+                        slug: 'increaseRabbits',
+                    },
+
+                    {
+                        name: 'Убрать кролика',
+                        slug: 'reduceRabbits',
+                    },
+                    
                     {
                         name: 'Добавить охотника',
                         slug: 'increaseHunters',
@@ -145,10 +155,10 @@
                 
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
-                    // let offsetY = document.getElementById('myUniqueId').style.top;
-                    // let offsetX = document.getElementById('myUniqueId').style.left;
-                    // document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
-                    // document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
+                    let offsetY = document.getElementById('myUniqueId').style.top;
+                    let offsetX = document.getElementById('myUniqueId').style.left;
+                    document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
+                    document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
 
                 }
             },
@@ -164,6 +174,36 @@
 
                     else if (method === 'reduceJuiciness') {
                         this.reduceJuiciness(cell);
+                    }
+
+                    else if (method === 'increaseRabbits') {
+                        this.rabbitsLive = this.rabbitsLive ? this.rabbitsLive : true
+                        this.increaseRabbits(cell);
+                    }
+
+                    else if (method === 'reduceRabbits') {
+                        this.rabbitsLive = this.rabbitsLive ? this.rabbitsLive : true
+                        this.reduceRabbits(cell);
+                    }
+
+                    else if(method === 'increaseHunters') {
+                        this.huntersLive = this.huntersLive ? this.huntersLive : true
+                        this.increaseHunters(cell);
+                    }
+
+                    else if(method === 'reduceHunters') {
+                        this.huntersLive = this.huntersLive ? this.huntersLive : true
+                        this.reduceHunters(cell);
+                    }
+
+                    else if(method === 'increaseWolves') {
+                        this.wolvesLive = this.wolvesLive ? this.wolvesLive : true
+                        this.increaseWolves(cell);
+                    }
+
+                    else if(method === 'reduceWolves') {
+                        this.wolvesLive = this.wolvesLive ? this.wolvesLive : true
+                        this.reduceWolves(cell);
                     }
                 }
 
@@ -181,22 +221,6 @@
 
                 else if(method === 'reduceSun') {
                     this.reduceSun(cell);
-                }
-
-                else if(method === 'increaseHunters') {
-                    this.increaseHunters(cell);
-                }
-
-                else if(method === 'reduceHunters') {
-                    this.reduceHunters(cell);
-                }
-
-                else if(method === 'increaseWolves') {
-                    this.increaseWolves(cell);
-                }
-
-                else if(method === 'reduceWolves') {
-                    this.reduceWolves(cell);
                 }
             },
 
@@ -663,6 +687,15 @@
             generationWeather(currentCell) {
                 currentCell['sun'] = this.getRandomInt(0, 3);
                 currentCell['rain'] = this.getRandomInt(0, 3);
+                
+                // Правило если солцне дождь
+                // if (currentCell['sun'] === 3) {
+                //     currentCell['rain'] = 0
+                // }
+
+                // if (currentCell['rain'] === 3) {
+                //     currentCell['sun'] = 0
+                // }
 
             },
 
@@ -692,6 +725,14 @@
 
             reduceSun(cell) {
                 cell.sun = (cell.sun != 0) ? cell.sun - 1 : cell.sun
+            },
+
+            increaseRabbits(cell) {
+                cell.rabbits = (cell.rabbits != 3) ? cell.rabbits + 1 : cell.rabbits
+            },
+
+            reduceRabbits(cell) {
+                cell.rabbits = (cell.rabbits != 0) ? cell.rabbits - 1 : cell.rabbits
             },
 
             increaseHunters(cell) {
