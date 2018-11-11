@@ -21,8 +21,7 @@
               <div class="field">
                 <label class="label is-size-6">Введите разрешение карты</label>
                 <div class="control has-icons-left">
-                  <input class="input is-medium " type="number" placeholder="Введите размерность карты" minlength="1" maxlength="3" v-model="size"
-                    min="1" max="100">
+                  <input class="input is-medium" type="number" placeholder="Введите размерность карты" v-model="size" min="1" max="100">
                   <span class="icon is-medium is-left">
                     <i class="fa fa-th"></i>
                   </span>

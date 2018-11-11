@@ -9,7 +9,7 @@
       </div>
       
     </div>
-    <div class="section" :style="{display: viewMap}">
+    <div class="" :style="{display: viewMap}">
       <mapa :tacts="track" />
     </div>
   </div>
