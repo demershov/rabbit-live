@@ -1,13 +1,13 @@
 <template>
     <div>
         <div class="columns is-centered left-menu">
-            <div class="column is-narrow">
+            <!-- <div class="column is-narrow">
                 <button class="button is-info" @click="nextTickByStep()">
                     <span class="icon is-medium">
                         <i class="fas fa-arrow-alt-circle-right"></i>
                     </span>
                 </button>
-            </div>
+            </div> -->
             <div class="column is-narrow">
                 <button class="button is-info" @click="previousTick()">
                     <span class="icon is-medium">
@@ -15,6 +15,20 @@
                     </span>
                 </button>
             </div>
+            <div class="column is-narrow">
+                <button class="button is-info" @click="nextTick()">
+                    <span class="icon is-medium">
+                        <i class="fa fa-angle-right"></i>
+                    </span>
+                </button>
+            </div>
+
+            <div class="column is-narrow">
+                <div class="control tactsAmount">
+                    <input class="input is-small has-text-centered" v-model="tactsAmount">
+                </div>
+            </div>
+
             <div class="column is-narrow">
                 <!-- Старт -->
                 <button class="button is-success" @click="autoLife()">
@@ -25,9 +39,6 @@
             </div>
 
             <div class="column is-narrow">
-                <h2 class='is-size-4'> {{ tact + 1 }}/{{tacts.length}}</h2>
-            </div>
-            <div class="column is-narrow">
                 <!-- Стоп  -->
                 <button class="button is-danger" @click="stopLife()">
                     <span class="icon is-medium">
@@ -36,26 +47,39 @@
                 </button>
             </div>
 
-            <div class="column is-narrow">
-                <button class="button is-info" @click="nextTick()">
-                    <span class="icon is-medium">
-                        <i class="fa fa-angle-right"></i>
-                    </span>
-                </button>
-            </div>
+            
         </div>
         
         <div class="container">
             <div class="columns is-centered is-1 is-variable settings">
-                <div class="column is-narrow">
-                    <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
+                <div class="column center-menu">
+                    <div class="columns is-centered">
+                        <h2 class='is-size-4'> {{ tact + 1 }}/{{tacts.length}}</h2>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                             <img class="rabbit" src='../assets/rabbit.svg'> - '{{ countRabbits }}'
+                        </div>
+
+                        <div class="column">
+                            <img class="man" src='../assets/man.svg'> - '{{ countHunters }}'
+                        </div>
+
+                        <div class="column">
+                             <img class="wolf" src='../assets/wolf.svg'> - '{{ countWolves }}'
+                        </div>
+                    </div>
                 </div>
-                <div class="column is-narrow">
-                    <button class="button is-primary" @click="addHunters()">Добавить охотников</button>
-                </div>
-                <div class="column is-narrow">
-                    <button class="button is-primary" @click="addWolves()">Добавить волков</button>
-                </div>
+                
+                
+                <!-- <div class="column is-narrow">
+                    <h2 class='is-size-4' v-if="currentActionState == 0">Трава {{ this.indexI }} / {{ this.indexJ }} </h2>
+                    <h2 class='is-size-4' v-if="currentActionState == 1">Кролики {{ this.indexI }} / {{ this.indexJ }}</h2>
+                    <h2 class='is-size-4' v-if="currentActionState == 2">Охотники {{ this.indexI }} / {{ this.indexJ }}</h2>
+                    <h2 class='is-size-4' v-if="currentActionState == 3">Волки {{ this.indexI }} / {{ this.indexJ }}</h2>
+                </div> -->
+                
+               
             </div>
             <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
                 <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
@@ -78,6 +102,32 @@
 
             
         </div>
+
+        <div class="columns is-centered right-menu">
+            <div class="column is-narrow">
+                <button class="button is-primary" @click="addRabbits()">
+                    <span class="icon is-large">
+                        <img class="fa-rabbit" src='../assets/rabbit.svg'>
+                    </span>
+                </button>
+            </div>
+
+             <div class="column is-narrow">
+                <button class="button is-primary" @click="addHunters()">
+                    <span class="icon is-large">
+                        <img class="fa-man" src='../assets/man.svg'>
+                    </span>
+                </button>
+            </div>
+
+            <div class="column is-narrow">
+                <button class="button is-primary" @click="addWolves()">
+                    <span class="icon is-large">
+                        <img class="fa-wolf" src='../assets/wolf.svg'>
+                    </span>
+                </button>
+            </div>
+        </div>
     </div>
     
 </template>
@@ -86,6 +136,7 @@
     export default {
         data () {
             return {
+                tactsAmount: 10,
                 tact: 0,
                 array: [],
                 life: 0,
@@ -104,12 +155,12 @@
                     },
 
                     {
-                        name: 'Добавить интенсивность дождя',
+                        name: 'Добавить дождя',
                         slug: 'increaseRain'
                     },
 
                     {
-                        name: 'Уменьшить интенсивность дождя',
+                        name: 'Уменьшить дождь',
                         slug: 'reduceRain'
                     },
 
@@ -123,6 +174,16 @@
                         slug: 'reduceSun',
                     },
 
+                    {
+                        name: 'Добавить кролика',
+                        slug: 'increaseRabbits',
+                    },
+
+                    {
+                        name: 'Убрать кролика',
+                        slug: 'reduceRabbits',
+                    },
+                    
                     {
                         name: 'Добавить охотника',
                         slug: 'increaseHunters',
@@ -152,10 +213,10 @@
                 
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
-                    // let offsetY = document.getElementById('myUniqueId').style.top;
-                    // let offsetX = document.getElementById('myUniqueId').style.left;
-                    // document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
-                    // document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
+                    let offsetY = document.getElementById('myUniqueId').style.top;
+                    let offsetX = document.getElementById('myUniqueId').style.left;
+                    document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
+                    document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
 
                 }
             },
@@ -171,6 +232,36 @@
 
                     else if (method === 'reduceJuiciness') {
                         this.reduceJuiciness(cell);
+                    }
+
+                    else if (method === 'increaseRabbits') {
+                        this.rabbitsLive = this.rabbitsLive ? this.rabbitsLive : true
+                        this.increaseRabbits(cell);
+                    }
+
+                    else if (method === 'reduceRabbits') {
+                        this.rabbitsLive = this.rabbitsLive ? this.rabbitsLive : true
+                        this.reduceRabbits(cell);
+                    }
+
+                    else if(method === 'increaseHunters') {
+                        this.huntersLive = this.huntersLive ? this.huntersLive : true
+                        this.increaseHunters(cell);
+                    }
+
+                    else if(method === 'reduceHunters') {
+                        this.huntersLive = this.huntersLive ? this.huntersLive : true
+                        this.reduceHunters(cell);
+                    }
+
+                    else if(method === 'increaseWolves') {
+                        this.wolvesLive = this.wolvesLive ? this.wolvesLive : true
+                        this.increaseWolves(cell);
+                    }
+
+                    else if(method === 'reduceWolves') {
+                        this.wolvesLive = this.wolvesLive ? this.wolvesLive : true
+                        this.reduceWolves(cell);
                     }
                 }
 
@@ -188,22 +279,6 @@
 
                 else if(method === 'reduceSun') {
                     this.reduceSun(cell);
-                }
-
-                else if(method === 'increaseHunters') {
-                    this.increaseHunters(cell);
-                }
-
-                else if(method === 'reduceHunters') {
-                    this.reduceHunters(cell);
-                }
-
-                else if(method === 'increaseWolves') {
-                    this.increaseWolves(cell);
-                }
-
-                else if(method === 'reduceWolves') {
-                    this.reduceWolves(cell);
                 }
             },
 
@@ -622,7 +697,15 @@
             },
 
             autoLife() {
-                this.life = setInterval(this.nextTick, 1000);
+                if (this.tactsAmount > 0) {
+                    this.life = setInterval(() => {
+                        this.tactsAmount--;
+                        if (this.tactsAmount == 0 ) {
+                            clearInterval(this.life);
+                        }
+                        this.nextTick()
+                    }, 1000);
+                }
             },
 
             stopLife() {
@@ -641,6 +724,15 @@
             generationWeather(currentCell) {
                 currentCell['sun'] = this.getRandomInt(0, 3);
                 currentCell['rain'] = this.getRandomInt(0, 3);
+                
+                // Правило если солцне дождь
+                // if (currentCell['sun'] === 3) {
+                //     currentCell['rain'] = 0
+                // }
+
+                // if (currentCell['rain'] === 3) {
+                //     currentCell['sun'] = 0
+                // }
 
             },
 
@@ -672,6 +764,14 @@
                 cell.sun = (cell.sun != 0) ? cell.sun - 1 : cell.sun
             },
 
+            increaseRabbits(cell) {
+                cell.rabbits = (cell.rabbits != 3) ? cell.rabbits + 1 : cell.rabbits
+            },
+
+            reduceRabbits(cell) {
+                cell.rabbits = (cell.rabbits != 0) ? cell.rabbits - 1 : cell.rabbits
+            },
+
             increaseHunters(cell) {
                 cell.hunters = (cell.hunters != 3) ? cell.hunters + 1 : cell.hunters
             },
@@ -688,6 +788,38 @@
                 cell.wolves = (cell.wolves != 0) ? cell.wolves - 1 : cell.wolves
             },
 
+        },
+        computed: {
+            countRabbits() {
+                let currentTact = this.tacts[this.tact];
+                let count = 0;
+                currentTact.forEach(i => {
+                    i.forEach(j => {
+                        count += j.rabbits
+                    })
+                });
+                return count;
+            },
+            countHunters() {
+                let currentTact = this.tacts[this.tact];
+                let count = 0;
+                currentTact.forEach(i => {
+                    i.forEach(j => {
+                        count += j.hunters
+                    })
+                });
+                return count;
+            },
+            countWolves() {
+                let currentTact = this.tacts[this.tact];
+                let count = 0;
+                currentTact.forEach(i => {
+                    i.forEach(j => {
+                        count += j.wolves
+                    })
+                });
+                return count;
+            },
         }
     }
 </script>
@@ -702,7 +834,7 @@
         padding-top: 15px;
     }
 
-    .left-menu {
+    .left-menu, .right-menu {
         display: flex; 
         flex-direction: column; 
         position: fixed; 
@@ -710,6 +842,19 @@
         height: 100vh; 
         background-color: #f1f1f1;
         margin: 0;
+    }
+
+    .tactsAmount {
+        width: 35px;
+    }
+
+    .tactsAmount > input {
+        height: 35px;
+    }
+
+    .right-menu {
+        right: 0;
+        top: 0;
     }
     
     .row {
@@ -784,4 +929,11 @@
         background-image: url('../assets/water.png');
     }
     
+    .rabbit, .man, .wolf {
+        width: 7%;
+    }
+
+    .center-menu {
+        background-color: #f1f1f1;
+    }
 </style>
