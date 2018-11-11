@@ -16,6 +16,10 @@
                     </span>
                 </button>
             </div>
+
+            <div class="column is-narrow">
+                <h2 class='is-size-4'> {{ tact + 1 }}/{{tacts.length}}</h2>
+            </div>
             <div class="column is-narrow">
                 <!-- Стоп  -->
                 <button class="button is-danger" @click="stopLife()">
@@ -46,15 +50,6 @@
                     <button class="button is-primary" @click="addWolves()">Добавить волков</button>
                 </div>
             </div>
-            <div class="container is-centered">
-                <h1 class="is-size-3 has-text-centered">
-                    ВСЕГО ТАКТОВ: {{tacts.length}}
-                </h1>
-                <h2 class="is-size-4">
-                    Текущий такт: {{ tact + 1 }}
-                </h2>
-
-            </div>
             <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
                 <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
                     <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
@@ -64,7 +59,6 @@
                     <img :src="'./src/assets/hunter' + cell.hunters + '.png'" alt="" srcset="" class="img-hunters" v-if="cell.hunters > 0">
                     <img :src="'./src/assets/wolf' + cell.wolves + '.png'" alt="" srcset="" class="img-wolves" v-if="cell.wolves > 0">
                     <br>
-                    <!-- <i v-if="cell.wolves != 0">Волки - {{ cell.wolves }}</i> -->
                 </div>
             </div>
             
@@ -151,10 +145,10 @@
                 
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
-                    let offsetY = document.getElementById('myUniqueId').style.top;
-                    let offsetX = document.getElementById('myUniqueId').style.left;
-                    document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
-                    document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
+                    // let offsetY = document.getElementById('myUniqueId').style.top;
+                    // let offsetX = document.getElementById('myUniqueId').style.left;
+                    // document.getElementById('myUniqueId').style.top = `${event.pageY - 50}px`;
+                    // document.getElementById('myUniqueId').style.left = `${event.pageX - 150}px`;
 
                 }
             },
@@ -213,7 +207,6 @@
 
             nextTick() {
                 // TODO: Перенести в функцию
-                
                 if (this.tact === this.tacts.length - 1) {
                     this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
                     this.processClampUnitsOnInvalidCell();
@@ -242,7 +235,7 @@
                             this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
                             this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell);
                             this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
-                            this.processingWovles(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.processingWolves(currentCell, rightCell, leftCell, topCell, bottomCell);
                         }
 
                         this.generationWeather(currentCell);
@@ -399,7 +392,7 @@
                 }
             },
 
-            processingWovles(cell, rightCell, leftCell, topCell, bottomCell) {
+            processingWolves(cell, rightCell, leftCell, topCell, bottomCell) {
                 if (this.wolvesLive && cell.wolves > 0) {
                     if (this.huntersLive) {
                         // Если охотники заспаунены, сначала все терки с ними
@@ -748,10 +741,11 @@
     }
 
     .cell {
-        min-width: 220px;
+        min-width: 218px;
         height: 200px;
         padding: 0;
         position: relative;
+        /* border: 1px solid red; */
     }
 
     .img-sun, .img-rain {   
@@ -797,6 +791,7 @@
         background-repeat: no-repeat;
         background-position: center center;
         background-size: cover;
+        /* background-size: 100.75%; */
     }
 
     .Hill {
