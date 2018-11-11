@@ -48,12 +48,6 @@
         <div class="container">
             <div class="columns is-centered is-1 is-variable settings">
                 <div class="column is-narrow">
-                    <h2 class='is-size-4' v-if="currentActionState == 0">Трава {{ this.indexI }} / {{ this.indexJ }} </h2>
-                    <h2 class='is-size-4' v-if="currentActionState == 1">Кролики {{ this.indexI }} / {{ this.indexJ }}</h2>
-                    <h2 class='is-size-4' v-if="currentActionState == 2">Охотники {{ this.indexI }} / {{ this.indexJ }}</h2>
-                    <h2 class='is-size-4' v-if="currentActionState == 3">Волки {{ this.indexI }} / {{ this.indexJ }}</h2>
-                </div>
-                <div class="column is-narrow">
                     <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
                 </div>
                 <div class="column is-narrow">
@@ -95,10 +89,6 @@
                 tact: 0,
                 array: [],
                 life: 0,
-                indexI: 0,
-                indexJ: 0,
-                arrayLength: 0,
-                currentActionState: 0,
                 rabbitsLive: false,
                 huntersLive: false,
                 wolvesLive: false,
@@ -237,68 +227,6 @@
                 
             },
 
-            nextTickByStep() {
-                // TODO: Перенести в функцию
-                if (this.tact === this.tacts.length - 1) {
-                    this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
-                    this.processClampUnitsOnInvalidCell();
-                    this.arrayLength = this.array[0].length;
-                    this.calcCellByStep();
-                }
-                else {
-                    this.array = JSON.parse(JSON.stringify(this.tacts[this.tact + 1]));
-                }
-            },
-
-            calcCellByStep() {
-                let i = this.indexI;
-                let j = this.indexJ;
-                let state = this.currentActionState;
-                if (i < this.arrayLength) {
-                    if (j < this.arrayLength) {
-                        let currentCell = this.array[i][j];
-                        let rightCell = this.array[i][j + 1];
-                        let leftCell = this.array[i][j - 1];
-                        let topCell = typeof this.array[i - 1] !== 'undefined' ? this.array[i - 1][j] : undefined;
-                        let bottomCell =  typeof this.array[i + 1] !== 'undefined' ? this.array[i + 1][j] : undefined;
-
-                        if (currentCell['type'] == 'Field') {
-                            switch (state) {
-                                case 0:
-                                    this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
-                                    break;
-                                case 1:
-                                    this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell);
-                                    break;
-                                case 2:
-                                    this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
-                                    break;
-                                case 3:
-                                    this.processingWolves(currentCell, rightCell, leftCell, topCell, bottomCell);
-                                    break;                                    
-                            }
-                        }
-                        state++;
-                        if (state > 3) {
-                            state = 0;
-                            this.currentActionState = state;
-                            j++;
-                            this.indexJ = j;
-                            this.generationWeather(currentCell);
-                        }
-                        this.currentActionState = state;
-                    } else {
-                        j = 0;
-                        this.indexJ = j;
-                        i++;
-                        this.indexI = i;
-                    }
-                } else {
-                    this.tacts.push(this.array);
-                    this.tact++;
-                }
-            },
-
             calcCells() {
                 for (let i = 0; i < this.array.length; i++) {
                     for (let j = 0; j < this.array[i].length; j++) {
@@ -314,7 +242,7 @@
                             this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
                             this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell);
                             this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
-                            this.processingWolves(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.proccessingWolves(currentCell, i, j);
                         }
 
                         this.generationWeather(currentCell);
@@ -471,20 +399,14 @@
                 }
             },
 
-            processingWolves(cell, rightCell, leftCell, topCell, bottomCell) {
+            proccessingWolves(cell, i, j) {
                 if (this.wolvesLive && cell.wolves > 0) {
-                    // Если охотники заспаунены, сначала все терки с ними
                     if (cell.wolves == cell.hunters) {
-                        // Разбегаются по клеткам, если это возможно в принципе (бывает, что некоторых придется оставить на месте)
-                        this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
-                        this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
-                        if (cell.wolves == cell.hunters) {
-                            // Если после разброса по клеткам друг от друга, в клетке снова остаются
-                            // клиенты, причем в равном количестве, я их уничтожаю,
-                            // ибо девать их просто некуда.
-                            // Условия такого в задаче нет, это личные соображения.
-                            cell.wolves = 0;
-                            cell.hunters = 0;
+                        this.moveTargetToCell(cell, i, j, 'hunters');
+                        this.moveTargetToCell(cell, i, j, 'wolves');
+                        if (cell.wolves > 0 && cell.hunters > 0 && cell.wolves == cell.hunters) {
+                            this.moveTargetToCell(cell, i, j, 'hunters', true);
+                            this.moveTargetToCell(cell, i, j, 'wolves', true);
                         }
                     }
 
@@ -493,110 +415,89 @@
                     else if (cell.wolves > cell.hunters && cell.hunters > 0) {
                         cell.hunters--;
                         if (cell.hunters > 0) {
-                            this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            this.moveTargetToCell(cell, i, j, 'hunters');
+                        }
+                        if (cell.hunters > 0) {
+                            this.moveTargetToCell(cell, i, j, 'hunters', true);
                         }
                     }
 
                     else if (cell.wolves < cell.hunters) {
                         cell.wolves--;
                         if (cell.wolves > 0) {
-                            this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            this.moveTargetToCell(cell, i, j, 'wolves');
+                        }
+                        if (cell.wolves > 0) {
+                            this.moveTargetToCell(cell, i, j, 'wolves', true);
                         }
                     }
                     // --------------------------------------------------------------------------- /
 
                     else if (this.rabbitsLive && cell.rabbits > 0 && cell.hunters == 0) {
-                        // Если в текущей клетке встретились кролики, волки их жрут за тик от 1 до 3 (по условию).
-                        // С остающимися кроликами не придумал, что сделать. Либо рассовывать их так же, как
-                        // волков и охотников вообще по любым ячейкам, либо оставлять на месте?
                         cell.rabbits -= this.getRandomInt(1, cell.rabbits < 3 ? cell.rabbits : 2);
                         if (cell.rabbits > 0) {
-                            this.moveRabbitsToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                            this.moveTargetToCell(cell, i, j, 'rabbits');
+                        }
+                        if (cell.rabbits > 0) {
+                            this.moveTargetToCell(cell, i, j, 'rabbits', true);
                         }
                     }
                 }
             },
 
-            moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell) {
-                let huntersLeft = cell.hunters;
-                while (huntersLeft != 0) {
-                    if (typeof leftCell !== 'undefined' && leftCell.hunters != 3 && leftCell.wolves == 0) {
-                        leftCell.hunters++;
-                        huntersLeft--;
-                        cell.hunters--;
-                    }
-                    else if (typeof rightCell !== 'undefined' && rightCell.hunters != 3 && rightCell.wolves == 0) {
-                        rightCell.hunters++;
-                        huntersLeft--;
-                        cell.hunters--;
-                    }
-                    else if (typeof topCell !== 'undefined' && topCell.hunters != 3 && topCell.wolves == 0) {
-                        topCell.hunters++;
-                        huntersLeft--;
-                        cell.hunters--;
-                    }
-                    else if (typeof bottomCell !== 'undefined' && bottomCell.hunters != 3 && bottomCell.wolves == 0) {
-                        bottomCell.hunters++;
-                        huntersLeft--;
-                        cell.hunters--;
-                    } else {
-                        huntersLeft--;
-                    }
+            moveTargetToCell(cell, i, j, target, flipCoin = false) {
+                //TODO: Сделать обходы более универсальными,
+                // чтобы исключить частичное дублирование кода для просчета кроликов
+                let targetsLeft = cell[target];
+                let row_limit = this.array.length - 1;
+                let column_limit = this.array[0].length - 1;
+                let enemyTarget = target;
+                switch (target) {
+                    case ('hunters'):
+                        enemyTarget = 'wolves';
+                        break;
+                    case ('wolves'):
+                        enemyTarget = 'hunters';
+                        break;
                 }
-            },
 
-            moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell) {
-                let wolvesLeft = cell.wolves;
-                while (wolvesLeft != 0) {
-                    if (typeof leftCell !== 'undefined' && leftCell.wolves != 3 && leftCell.hunters == 0) {
-                        leftCell.wolves++;
-                        wolvesLeft--;
-                        cell.wolves--;
-                    }
-                    else if (typeof rightCell !== 'undefined' && rightCell.wolves != 3 && rightCell.hunters == 0) {
-                        rightCell.wolves++;
-                        wolvesLeft--;
-                        cell.wolves--;
-                    }
-                    else if (typeof topCell !== 'undefined' && topCell.wolves != 3 && topCell.hunters == 0) {
-                        topCell.wolves++;
-                        wolvesLeft--;
-                        cell.wolves--;
-                    }
-                    else if (typeof bottomCell !== 'undefined' && bottomCell.wolves != 3 && bottomCell.hunters == 0) {
-                        bottomCell.wolves++;
-                        wolvesLeft--;
-                        cell.wolves--;
-                    } else {
-                        wolvesLeft--;
-                    }
-                }
-            },
-
-            moveRabbitsToCell(cell, rightCell, leftCell, topCell, bottomCell) {
-                let rabbitsLeft = cell.rabbits;
-                while (rabbitsLeft != 0) {
-                    if (typeof leftCell !== 'undefined' && leftCell.wolves == 0 && leftCell.hunters == 0) {
-                        leftCell.rabbits++;
-                        rabbitsLeft--;
-                        cell.rabbits--;
-                    }
-                    else if (typeof rightCell !== 'undefined' && rightCell.wolves == 0 && rightCell.hunters == 0) {
-                        rightCell.rabbits++;
-                        rabbitsLeft--;
-                        cell.rabbits--;
-                    }
-                    else if (typeof topCell !== 'undefined' && topCell.wolves == 0 && topCell.hunters == 0) {
-                        topCell.rabbits++;
-                        rabbitsLeft--;
-                        cell.rabbits--;
-                    }
-                    else if (typeof bottomCell !== 'undefined' && bottomCell.wolves == 0 && bottomCell.hunters == 0) {
-                        bottomCell.rabbits++;
-                        rabbitsLeft--;
-                        cell.rabbits--;
-                    } else {
-                        rabbitsLeft--;
+                if (row_limit > 0) {
+                    for (let x = Math.max(0, i - 1); x <= Math.min(i + 1, row_limit); x++) {
+                        for (let y = Math.max(0, j - 1); y <= Math.min(j + 1, column_limit); y++) {
+                            if ((String(x) + String(y)).localeCompare(String(i) + String(j))) {
+                                if (flipCoin) {
+                                    if (typeof this.array[x][y] != 'undefined' && this.array[x][y][enemyTarget] == 0) {
+                                        while (targetsLeft > 0 && this.array[x][y][target] < 3) {
+                                            this.array[x][y][target]++;
+                                            targetsLeft--;
+                                            cell[target]--;
+                                        }
+                                    }
+                                } else if (this.checkNeighbour(this.array[x][y], 'Field') && this.array[x][y][enemyTarget] == 0) {
+                                    while (targetsLeft > 0 && this.array[x][y][target] < 3) {
+                                        this.array[x][y][target]++;
+                                        targetsLeft--;
+                                        cell[target]--;
+                                    }
+                                } else if (target.localeCompare('rabbits') == 0) {
+                                    if (flipCoin) {
+                                        if (typeof this.array[x][y] != 'undefined' && this.array[x][y].hunters == 0 && this.array[x][y].wolves == 0) {
+                                            while (targetsLeft > 0 && this.array[x][y].rabbits < 3) {
+                                                this.array[x][y].rabbits++;
+                                                targetsLeft--;
+                                                cell.rabbits--;
+                                            }
+                                        }
+                                    } else if (this.checkNeighbour(this.array[x][y], 'Field') && this.array[x][y].hunters == 0 && this.array[x][y].wolves == 0) {
+                                        while (targetsLeft > 0 && this.array.rabbits < 3) {
+                                            this.array[x][y].rabbits++;
+                                            targetsLeft--;
+                                            cell.rabbits--;
+                                        }
+                                    }    
+                                }  
+                            }
+                        }
                     }
                 }
             },
