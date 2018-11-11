@@ -2,6 +2,13 @@
     <div>
         <div class="columns is-centered left-menu">
             <div class="column is-narrow">
+                <button class="button is-info" @click="nextTickByStep()">
+                    <span class="icon is-medium">
+                        <i class="fas fa-arrow-alt-circle-right"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="column is-narrow">
                 <button class="button is-info" @click="previousTick()">
                     <span class="icon is-medium">
                         <i class="fa fa-angle-left"></i>
@@ -40,6 +47,12 @@
         
         <div class="container">
             <div class="columns is-centered is-1 is-variable settings">
+                <div class="column is-narrow">
+                    <h2 class='is-size-4' v-if="currentActionState == 0">Трава {{ this.indexI }} / {{ this.indexJ }} </h2>
+                    <h2 class='is-size-4' v-if="currentActionState == 1">Кролики {{ this.indexI }} / {{ this.indexJ }}</h2>
+                    <h2 class='is-size-4' v-if="currentActionState == 2">Охотники {{ this.indexI }} / {{ this.indexJ }}</h2>
+                    <h2 class='is-size-4' v-if="currentActionState == 3">Волки {{ this.indexI }} / {{ this.indexJ }}</h2>
+                </div>
                 <div class="column is-narrow">
                     <button class="button is-primary" @click="addRabbits()">Добавить кроликов</button>
                 </div>
@@ -82,6 +95,10 @@
                 tact: 0,
                 array: [],
                 life: 0,
+                indexI: 0,
+                indexJ: 0,
+                arrayLength: 0,
+                currentActionState: 0,
                 rabbitsLive: false,
                 huntersLive: false,
                 wolvesLive: false,
@@ -218,6 +235,68 @@
                 this.tact++;
                 // console.log(this.tacts[this.tact]);
                 
+            },
+
+            nextTickByStep() {
+                // TODO: Перенести в функцию
+                if (this.tact === this.tacts.length - 1) {
+                    this.array = JSON.parse(JSON.stringify(this.tacts[this.tact]));
+                    this.processClampUnitsOnInvalidCell();
+                    this.arrayLength = this.array[0].length;
+                    this.calcCellByStep();
+                }
+                else {
+                    this.array = JSON.parse(JSON.stringify(this.tacts[this.tact + 1]));
+                }
+            },
+
+            calcCellByStep() {
+                let i = this.indexI;
+                let j = this.indexJ;
+                let state = this.currentActionState;
+                if (i < this.arrayLength) {
+                    if (j < this.arrayLength) {
+                        let currentCell = this.array[i][j];
+                        let rightCell = this.array[i][j + 1];
+                        let leftCell = this.array[i][j - 1];
+                        let topCell = typeof this.array[i - 1] !== 'undefined' ? this.array[i - 1][j] : undefined;
+                        let bottomCell =  typeof this.array[i + 1] !== 'undefined' ? this.array[i + 1][j] : undefined;
+
+                        if (currentCell['type'] == 'Field') {
+                            switch (state) {
+                                case 0:
+                                    this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
+                                    break;
+                                case 1:
+                                    this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell);
+                                    break;
+                                case 2:
+                                    this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
+                                    break;
+                                case 3:
+                                    this.processingWolves(currentCell, rightCell, leftCell, topCell, bottomCell);
+                                    break;                                    
+                            }
+                        }
+                        state++;
+                        if (state > 3) {
+                            state = 0;
+                            this.currentActionState = state;
+                            j++;
+                            this.indexJ = j;
+                            this.generationWeather(currentCell);
+                        }
+                        this.currentActionState = state;
+                    } else {
+                        j = 0;
+                        this.indexJ = j;
+                        i++;
+                        this.indexI = i;
+                    }
+                } else {
+                    this.tacts.push(this.array);
+                    this.tact++;
+                }
             },
 
             calcCells() {
@@ -394,41 +473,39 @@
 
             processingWolves(cell, rightCell, leftCell, topCell, bottomCell) {
                 if (this.wolvesLive && cell.wolves > 0) {
-                    if (this.huntersLive) {
-                        // Если охотники заспаунены, сначала все терки с ними
+                    // Если охотники заспаунены, сначала все терки с ними
+                    if (cell.wolves == cell.hunters) {
+                        // Разбегаются по клеткам, если это возможно в принципе (бывает, что некоторых придется оставить на месте)
+                        this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                        this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
                         if (cell.wolves == cell.hunters) {
-                            // Разбегаются по клеткам, если это возможно в принципе (бывает, что некоторых придется оставить на месте)
-                            this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
-                            this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
-                            if (cell.wolves == cell.hunters) {
-                                // Если после разброса по клеткам друг от друга, в клетке снова остаются
-                                // клиенты, причем в равном количестве, я их уничтожаю,
-                                // ибо девать их просто некуда.
-                                // Условия такого в задаче нет, это личные соображения.
-                                cell.wolves = 0;
-                                cell.hunters = 0;
-                            }
+                            // Если после разброса по клеткам друг от друга, в клетке снова остаются
+                            // клиенты, причем в равном количестве, я их уничтожаю,
+                            // ибо девать их просто некуда.
+                            // Условия такого в задаче нет, это личные соображения.
+                            cell.wolves = 0;
+                            cell.hunters = 0;
                         }
-
-                        // --------------------------------------------------------------------------- //
-                        // В зависимости от того, кого больше, убиваем / перемещаем
-                        else if (cell.wolves > cell.hunters) {
-                            cell.hunters--;
-                            if (cell.hunters > 0) {
-                                this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
-                            }
-                        }
-
-                        else if (cell.wolves < cell.hunters) {
-                            cell.wolves--;
-                            if (cell.wolves > 0) {
-                                this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
-                            }
-                        }
-                        // --------------------------------------------------------------------------- /
                     }
 
-                    if (this.rabbitsLive) {
+                    // --------------------------------------------------------------------------- //
+                    // В зависимости от того, кого больше, убиваем / перемещаем
+                    else if (cell.wolves > cell.hunters && cell.hunters > 0) {
+                        cell.hunters--;
+                        if (cell.hunters > 0) {
+                            this.moveHuntersToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                        }
+                    }
+
+                    else if (cell.wolves < cell.hunters) {
+                        cell.wolves--;
+                        if (cell.wolves > 0) {
+                            this.moveWolvesToCell(cell, rightCell, leftCell, topCell, bottomCell);
+                        }
+                    }
+                    // --------------------------------------------------------------------------- /
+
+                    else if (this.rabbitsLive && cell.rabbits > 0 && cell.hunters == 0) {
                         // Если в текущей клетке встретились кролики, волки их жрут за тик от 1 до 3 (по условию).
                         // С остающимися кроликами не придумал, что сделать. Либо рассовывать их так же, как
                         // волков и охотников вообще по любым ячейкам, либо оставлять на месте?
