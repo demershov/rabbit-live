@@ -103,9 +103,10 @@
                     this.map[i].push(cell)
                 }
             }
-
+            this.percentField = this.percentField > 100 ? 100 : this.percentField;
+            this.percentField = this.percentField < 0 ? 0 : this.percentField;
             if (this.size > 1) {
-               let mustBeFields = Math.round((this.size * this.size) * (this.percentField / 100))
+              let mustBeFields = Math.round((this.size * this.size) * (this.percentField / 100))
               if (this.countFields.length < mustBeFields) {
                 let lackingFields = mustBeFields - this.countFields.length;
                 while (lackingFields != 0) {
@@ -127,6 +128,9 @@
                   lackingOtherFields -= 1;
                 }
               }
+            }
+            else {
+              this.map[0][0].type = 'Field'
             }
 
             this.track.push(this.map);

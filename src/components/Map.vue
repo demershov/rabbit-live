@@ -1,13 +1,6 @@
 <template>
     <div>
         <div class="columns is-centered left-menu">
-            <!-- <div class="column is-narrow">
-                <button class="button is-info" @click="nextTickByStep()">
-                    <span class="icon is-medium">
-                        <i class="fas fa-arrow-alt-circle-right"></i>
-                    </span>
-                </button>
-            </div> -->
             <div class="column is-narrow">
                 <button class="button is-info" @click="previousTick()">
                     <span class="icon is-medium">
@@ -49,38 +42,29 @@
 
             
         </div>
-        
-        <div class="container">
-            <div class="columns is-centered is-1 is-variable settings">
+
+        <div class="columns is-centered is-1 is-variable settings">
                 <div class="column center-menu">
                     <div class="columns is-centered">
-                        <h2 class='is-size-4'> {{ tact + 1 }}/{{tacts.length}}</h2>
+                        <h2 class='is-size-5'> {{ tact + 1 }}/{{tacts.length}}</h2>
                     </div>
                     <div class="columns">
                         <div class="column">
-                             <img class="rabbit" src='../assets/rabbit.svg'> - '{{ countRabbits }}'
+                             <img class="rabbit" src='../assets/rabbit.svg'> - <span class="is-size-5"> '{{ countRabbits }}' </span>
                         </div>
 
                         <div class="column">
-                            <img class="man" src='../assets/man.svg'> - '{{ countHunters }}'
+                            <img class="man" src='../assets/man.svg'> - <span class="is-size-5"> '{{ countHunters }}' </span>
                         </div>
 
                         <div class="column">
-                             <img class="wolf" src='../assets/wolf.svg'> - '{{ countWolves }}'
+                             <img class="wolf" src='../assets/wolf.svg'> - <span class="is-size-5"> '{{ countWolves }}' </span> 
                         </div>
                     </div>
                 </div>
-                
-                
-                <!-- <div class="column is-narrow">
-                    <h2 class='is-size-4' v-if="currentActionState == 0">Трава {{ this.indexI }} / {{ this.indexJ }} </h2>
-                    <h2 class='is-size-4' v-if="currentActionState == 1">Кролики {{ this.indexI }} / {{ this.indexJ }}</h2>
-                    <h2 class='is-size-4' v-if="currentActionState == 2">Охотники {{ this.indexI }} / {{ this.indexJ }}</h2>
-                    <h2 class='is-size-4' v-if="currentActionState == 3">Волки {{ this.indexI }} / {{ this.indexJ }}</h2>
-                </div> -->
-                
-               
             </div>
+        
+        <div class="hero">
             <div v-for="(row, indexRow) in tacts[tact]" :key="indexRow" class="row">
                 <div v-for="(cell, indexCell) in row" :key="indexCell" class="cell item-wrapper__item" :class="cell.type" @contextmenu.prevent.stop="handleClick($event, [indexRow, indexCell])">
                     <img :src="'./src/assets/rain' + cell.rain + '.png'" alt="" srcset="" class="img-rain" v-if="cell.rain > 0">
@@ -209,8 +193,7 @@
         props: ['tacts'],
         methods: {
             handleClick (event, item) {
-                console.log(event);
-                
+                // console.log(event);
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
                     let offsetY = document.getElementById('myUniqueId').style.top;
@@ -309,13 +292,34 @@
                         let currentCell = this.array[i][j];
                         let rightCell = this.array[i][j + 1];
                         let leftCell = this.array[i][j - 1];
-                        let topCell = typeof this.array[i - 1] !== 'undefined' ? this.array[i - 1][j] : undefined;
-                        let bottomCell =  typeof this.array[i + 1] !== 'undefined' ? this.array[i + 1][j] : undefined;
+                        
+                        if (typeof this.array[i - 1] !== 'undefined') {
+                            var topCell =  this.array[i - 1][j]
+                            var leftTopCell = typeof this.array[i - 1][j - 1] !== 'undefined' ? this.array[i - 1][j - 1] : undefined;
+                            var rightTopCell = typeof this.array[i - 1][j + 1] !== 'undefined' ?  this.array[i - 1][j + 1] : undefined;
+                        }
+                        else {
+                            var topCell = undefined;
+                            var leftTopCell = undefined;
+                            var rightTopCell = undefined;
+                        }
+                        
+                        if (typeof this.array[i + 1] != 'undefined') {
+                            var bottomCell =  typeof this.array[i + 1];
+                            var leftBottomCell =  typeof this.array[i + 1][j - 1] !== 'undefined' ? this.array[i + 1][j - 1] : undefined;
+                            var rightBottomCell =  typeof this.array[i + 1][j + 1] !== 'undefined' ? this.array[i + 1][j +1] : undefined;  
+                        }
+                        else {
+                            var bottomCell = undefined;
+                            var leftBottomCell = undefined;
+                            var rightBottomCell = undefined;
+                        }
+                       
 
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
-                            this.processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell);
-                            this.proccessingRabbits(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.processingGrass(currentCell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell);
+                            this.proccessingRabbits(currentCell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell);
                             this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
                             this.proccessingWolves(currentCell, i, j);
                         }
@@ -369,7 +373,7 @@
                 }
             },
 
-            proccessingRabbits(cell, rightCell, leftCell, topCell, bottomCell) {
+            proccessingRabbits(cell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell) {
                 if (this.rabbitsLive && cell.rabbits > 0) {
                     if(cell.rabbits == 2) {
                         cell.rabbits += 1;
@@ -377,13 +381,30 @@
 
                     if (cell.rabbits > cell.grass) {
                         let hungryRabbits = (cell.rabbits - cell.grass > 0) ? cell.rabbits - cell.grass : 0;
-                        console.log('Зашел!', cell, hungryRabbits);
                         while(hungryRabbits != 0)
                         {
-                            console.log('ммммм');
-                            if (this.checkNeighbour(leftCell, 'Field') && leftCell.rabbits != 3 && leftCell.rabbits + 1 <= leftCell.grass) {
-                                console.log('Левая,', cell, leftCell);
-                                console.log(leftCell.rabbits + 1 <= leftCell.grass);
+                            if (this.checkNeighbour(leftTopCell, 'Field') && leftTopCell.rabbits != 3 && leftTopCell.rabbits + 1 <= leftTopCell.grass) {
+                                leftTopCell.rabbits += 1;
+                                leftTopCell.grass -= 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
+                            else if (this.checkNeighbour(topCell, 'Field') && topCell.rabbits != 3 && topCell.rabbits + 1 <= topCell.grass) {
+                                topCell.rabbits += 1;
+                                topCell.grass -= 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
+                            else if (this.checkNeighbour(rightTopCell, 'Field') && rightTopCell.rabbits != 3 && rightTopCell.rabbits + 1 <= rightTopCell.grass) {
+                                rightTopCell.rabbits += 1;
+                                rightTopCell.grass -= 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
+                            else if (this.checkNeighbour(leftCell, 'Field') && leftCell.rabbits != 3 && leftCell.rabbits + 1 <= leftCell.grass) {
                                 leftCell.rabbits += 1;
                                 leftCell.grass -= 1;
                                 hungryRabbits--;
@@ -391,29 +412,29 @@
                             }
 
                             else if (this.checkNeighbour(rightCell, 'Field') && rightCell.rabbits != 3 && rightCell.rabbits + 1 <= rightCell.grass) {
-                                console.log('Правая,', cell, rightCell);
-                                console.log(rightCell.rabbits + 1 <= rightCell.grass);
                                 rightCell.rabbits += 1;
                                 hungryRabbits--;
                                 cell.rabbits -= 1;
                             }
-
-                            else if (this.checkNeighbour(topCell, 'Field') && topCell.rabbits != 3 && topCell.rabbits + 1 <= topCell.grass) {
-                                console.log('Верхняя', cell, topCell);
-                                console.log(topCell.rabbits + 1 <= topCell.grass, );
-                                topCell.rabbits += 1;
-                                topCell.grass -= 1;
+                            
+                            else if (this.checkNeighbour(leftBottomCell, 'Field') && leftBottomCell.rabbits != 3 && leftBottomCell.rabbits + 1 <= leftBottomCell.grass) {
+                                leftBottomCell.rabbits += 1;
                                 hungryRabbits--;
                                 cell.rabbits -= 1;
                             }
 
                             else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.rabbits != 3 && bottomCell.rabbits + 1 <= bottomCell.grass) {
-                                console.log('Нижняя', cell, bottomCell);
-                                console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
                                 bottomCell.rabbits += 1;
                                 hungryRabbits--;
                                 cell.rabbits -= 1;
                             }
+
+                            else if (this.checkNeighbour(rightBottomCell, 'Field') && rightBottomCell.rabbits != 3 && rightBottomCell.rabbits + 1 <= rightBottomCell.grass) {
+                                rightBottomCell.rabbits += 1;
+                                hungryRabbits--;
+                                cell.rabbits -= 1;
+                            }
+
                             else {
                                 hungryRabbits--;
                                 cell.rabbits -= 1;
@@ -432,8 +453,6 @@
                             while(freeHunters != 0)
                             {
                                 if (this.checkNeighbour(leftCell, 'Field') && leftCell.hunters != 3 && leftCell.hunters + 1 <= leftCell.rabbits) {
-                                    // console.log('Левая,', cell, leftCell);
-                                    // console.log(leftCell.rabbits + 1 <= leftCell.grass);
                                     leftCell.hunters += 1;
                                     leftCell.rabbits -= 1;
                                     freeHunters--;
@@ -441,16 +460,12 @@
                                 }
     
                                 else if (this.checkNeighbour(rightCell, 'Field') && rightCell.hunters != 3 && rightCell.hunters + 1 <= rightCell.rabbits) {
-                                    // console.log('Правая,', cell, rightCell);
-                                    // console.log(rightCell.rabbits + 1 <= rightCell.grass);
                                     rightCell.hunters += 1;
                                     freeHunters--;
                                     cell.hunters -= 1;
                                 }
     
                                 else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
-                                    // console.log('Верхняя', cell, topCell);
-                                    // console.log(topCell.rabbits + 1 <= topCell.grass, );
                                     topCell.hunters += 1;
                                     topCell.rabbits -= 1;
                                     freeHunters--;
@@ -458,8 +473,6 @@
                                 }
     
                                 else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.hunters != 3 && bottomCell.hunters + 1 <= bottomCell.rabbits) {
-                                    // console.log('Нижняя', cell, bottomCell);
-                                    // console.log(bottomCell.rabbits + 1 <= bottomCell.grass);
                                     bottomCell.hunters += 1;
                                     freeHunters--;
                                     cell.hunters -= 1;
@@ -521,7 +534,7 @@
             },
 
             moveTargetToCell(cell, i, j, target, flipCoin = false) {
-                //TODO: Сделать обходы более универсальными,
+                // TODO: Сделать обходы более универсальными,
                 // чтобы исключить частичное дублирование кода для просчета кроликов
                 let targetsLeft = cell[target];
                 let row_limit = this.array.length - 1;
@@ -597,12 +610,33 @@
             },
 
             // В зависимости от соседней ячейке появляется трава или нет
-            processingGrass(currentCell, rightCell, leftCell, topCell, bottomCell) {
-                // Если ячейка справа существует и соседняя ячейка справа явялется водой
-                if (this.checkNeighbour(rightCell, 'Water')) {
+            processingGrass(currentCell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell) {
+                if (this.checkNeighbour(leftTopCell, 'Water')) {
                     // Если у текущей ячейке существует солнце
                     if (currentCell['sun'] > 0) {
                         this.increaseJuiciness(currentCell);
+                    }
+                    else {
+                        this.liveGrass(currentCell);
+                    }
+                }
+
+                // Если ячейка сверху существует и соседняя ячейка сверху явялется водой
+                else if (this.checkNeighbour(topCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
+                    if ( currentCell['sun'] > 0) {
+                         this.increaseJuiciness(currentCell);
+                    }
+                    else {
+                        this.liveGrass(currentCell);
+                    }
+                }
+
+                // Если ячейка сверху cправа существует и соседняя ячейка сверху явялется водой
+                else if (this.checkNeighbour(rightTopCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
+                    if ( currentCell['sun'] > 0) {
+                         this.increaseJuiciness(currentCell);
                     }
                     else {
                         this.liveGrass(currentCell);
@@ -620,8 +654,19 @@
                     }
                 }
 
-                // Если ячейка сверху существует и соседняя ячейка сверху явялется водой
-                else if (this.checkNeighbour(topCell, 'Water')) {
+                // Если ячейка справа существует и соседняя ячейка справа явялется водой
+                else if (this.checkNeighbour(rightCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
+                    if (currentCell['sun'] > 0) {
+                        this.increaseJuiciness(currentCell);
+                    }
+                    else {
+                        this.liveGrass(currentCell);
+                    }
+                }
+
+                // Если ячейка снизу существует и соседняя ячейка снизу явялется водой
+                else if (this.checkNeighbour(leftBottomCell, 'Water')) {
                     // Если у текущей ячейке существует солнце
                     if ( currentCell['sun'] > 0) {
                          this.increaseJuiciness(currentCell);
@@ -641,6 +686,18 @@
                         this.liveGrass(currentCell);
                     }
                 }
+
+                // Если ячейка снизу существует и соседняя ячейка снизу явялется водой
+                else if (this.checkNeighbour(rightBottomCell, 'Water')) {
+                    // Если у текущей ячейке существует солнце
+                    if ( currentCell['sun'] > 0) {
+                         this.increaseJuiciness(currentCell);
+                    }
+                    else {
+                        this.liveGrass(currentCell);
+                    }
+                }
+
                 else {
                     this.liveGrass(currentCell);
                 }
@@ -791,34 +848,41 @@
         },
         computed: {
             countRabbits() {
-                let currentTact = this.tacts[this.tact];
-                let count = 0;
-                currentTact.forEach(i => {
-                    i.forEach(j => {
-                        count += j.rabbits
-                    })
-                });
-                return count;
+                if (this.tacts.length > 0) {
+                    let currentTact = this.tacts[this.tact];
+                    let count = 0;
+                    currentTact.forEach(i => {
+                        i.forEach(j => {
+                            count += j.rabbits
+                        })
+                    });
+                    return count;
+                }
+                
             },
             countHunters() {
-                let currentTact = this.tacts[this.tact];
-                let count = 0;
-                currentTact.forEach(i => {
-                    i.forEach(j => {
-                        count += j.hunters
-                    })
-                });
-                return count;
+                if (this.tacts.length > 0) {
+                    let currentTact = this.tacts[this.tact];
+                    let count = 0;
+                    currentTact.forEach(i => {
+                        i.forEach(j => {
+                            count += j.hunters
+                        })
+                    });
+                    return count;
+                }
             },
             countWolves() {
-                let currentTact = this.tacts[this.tact];
-                let count = 0;
-                currentTact.forEach(i => {
-                    i.forEach(j => {
-                        count += j.wolves
-                    })
-                });
-                return count;
+                if (this.tacts.length > 0) {
+                    let currentTact = this.tacts[this.tact];
+                    let count = 0;
+                    currentTact.forEach(i => {
+                        i.forEach(j => {
+                            count += j.wolves
+                        })
+                    });
+                    return count;
+                }
             },
         }
     }
@@ -935,5 +999,8 @@
 
     .center-menu {
         background-color: #f1f1f1;
+    }
+    .columns.padding-right-plus {
+        padding-right: 50px
     }
 </style>
