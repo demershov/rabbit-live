@@ -193,7 +193,6 @@
         props: ['tacts'],
         methods: {
             handleClick (event, item) {
-                // console.log(event);
                 if(this.tact === this.tacts.length - 1) { 
                     this.$refs.vueSimpleContextMenu.showMenu(event, item);
                     let offsetY = document.getElementById('myUniqueId').style.top;
@@ -281,8 +280,6 @@
                     this.array = JSON.parse(JSON.stringify(this.tacts[this.tact + 1]));
                 }
                 this.tact++;
-                // console.log(this.tacts[this.tact]);
-                
             },
 
             calcCells() {
@@ -294,7 +291,7 @@
                         let leftCell = this.array[i][j - 1];
                         
                         if (typeof this.array[i - 1] !== 'undefined') {
-                            var topCell =  this.array[i - 1][j]
+                            var topCell = this.array[i - 1][j]
                             var leftTopCell = typeof this.array[i - 1][j - 1] !== 'undefined' ? this.array[i - 1][j - 1] : undefined;
                             var rightTopCell = typeof this.array[i - 1][j + 1] !== 'undefined' ?  this.array[i - 1][j + 1] : undefined;
                         }
@@ -304,10 +301,10 @@
                             var rightTopCell = undefined;
                         }
                         
-                        if (typeof this.array[i + 1] != 'undefined') {
-                            var bottomCell =  typeof this.array[i + 1];
-                            var leftBottomCell =  typeof this.array[i + 1][j - 1] !== 'undefined' ? this.array[i + 1][j - 1] : undefined;
-                            var rightBottomCell =  typeof this.array[i + 1][j + 1] !== 'undefined' ? this.array[i + 1][j +1] : undefined;  
+                        if (typeof this.array[i + 1] !== 'undefined') {
+                            var bottomCell = this.array[i + 1][j];
+                            var leftBottomCell = typeof this.array[i + 1][j - 1] !== 'undefined' ? this.array[i + 1][j - 1] : undefined;
+                            var rightBottomCell = typeof this.array[i + 1][j + 1] !== 'undefined' ? this.array[i + 1][j +1] : undefined;  
                         }
                         else {
                             var bottomCell = undefined;
@@ -315,12 +312,11 @@
                             var rightBottomCell = undefined;
                         }
                        
-
                         // Если данная ячейка является полем
                         if (currentCell['type'] === 'Field') {
                             this.processingGrass(currentCell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell);
                             this.proccessingRabbits(currentCell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell);
-                            this.proccessingHunters(currentCell, rightCell, leftCell, topCell, bottomCell);
+                            this.proccessingHunters(currentCell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell);
                             this.proccessingWolves(currentCell, i, j);
                         }
 
@@ -424,6 +420,7 @@
                             }
 
                             else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.rabbits != 3 && bottomCell.rabbits + 1 <= bottomCell.grass) {
+                                
                                 bottomCell.rabbits += 1;
                                 hungryRabbits--;
                                 cell.rabbits -= 1;
@@ -445,14 +442,35 @@
                 }
             },
 
-            proccessingHunters(cell, rightCell, leftCell, topCell, bottomCell) {
+            proccessingHunters(cell, leftTopCell, topCell, rightTopCell, leftCell, rightCell, leftBottomCell, bottomCell, rightBottomCell) {
                 if (this.huntersLive && cell.hunters > 0) {
                     if (cell.wolves == 0) {
                         if (cell.hunters > cell.rabbits) {
                             let freeHunters = (cell.hunters - cell.rabbits > 0) ? cell.hunters - cell.rabbits : 0;
                             while(freeHunters != 0)
                             {
-                                if (this.checkNeighbour(leftCell, 'Field') && leftCell.hunters != 3 && leftCell.hunters + 1 <= leftCell.rabbits) {
+                                if (this.checkNeighbour(leftTopCell, 'Field') && leftTopCell.hunters != 3 && leftTopCell.hunters + 1 <= leftTopCell.rabbits) {
+                                    leftTopCell.hunters += 1;
+                                    leftTopCell.rabbits -= 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+
+                                else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
+                                    topCell.hunters += 1;
+                                    topCell.rabbits -= 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+
+                                else if (this.checkNeighbour(rightTopCell, 'Field') && rightTopCell.hunters != 3 && rightTopCell.hunters + 1 <= rightTopCell.rabbits) {
+                                    rightTopCell.hunters += 1;
+                                    rightTopCell.rabbits -= 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+    
+                                else if (this.checkNeighbour(leftCell, 'Field') && leftCell.hunters != 3 && leftCell.hunters + 1 <= leftCell.rabbits) {
                                     leftCell.hunters += 1;
                                     leftCell.rabbits -= 1;
                                     freeHunters--;
@@ -465,18 +483,24 @@
                                     cell.hunters -= 1;
                                 }
     
-                                else if (this.checkNeighbour(topCell, 'Field') && topCell.hunters != 3 && topCell.hunters + 1 <= topCell.rabbits) {
-                                    topCell.hunters += 1;
-                                    topCell.rabbits -= 1;
+                                else if (this.checkNeighbour(leftBottomCell, 'Field') && leftBottomCell.hunters != 3 && leftBottomCell.hunters + 1 <= leftBottomCell.rabbits) {
+                                    leftBottomCell.hunters += 1;
                                     freeHunters--;
                                     cell.hunters -= 1;
                                 }
-    
+
                                 else if (this.checkNeighbour(bottomCell, 'Field') && bottomCell.hunters != 3 && bottomCell.hunters + 1 <= bottomCell.rabbits) {
                                     bottomCell.hunters += 1;
                                     freeHunters--;
                                     cell.hunters -= 1;
                                 }
+
+                                else if (this.checkNeighbour(rightBottomCell, 'Field') && rightBottomCell.hunters != 3 && rightBottomCell.hunters + 1 <= rightBottomCell.rabbits) {
+                                    rightBottomCell.hunters += 1;
+                                    freeHunters--;
+                                    cell.hunters -= 1;
+                                }
+
                                 else {
                                     freeHunters--;
                                 }
